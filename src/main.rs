@@ -7,9 +7,7 @@ use serenity::client::{Client, Context, EventHandler};
 use serenity::framework::standard::macros::help;
 use serenity::framework::standard::CommandGroup;
 use serenity::framework::standard::{
-    help_commands,
-    macros::{command, group},
-    Args, CommandResult, HelpOptions, StandardFramework,
+    help_commands, Args, CommandResult, HelpOptions, StandardFramework,
 };
 use serenity::http::Http;
 use serenity::model::id::UserId;
@@ -19,14 +17,9 @@ use crate::admin::ADMINCOMMANDS_GROUP;
 use crate::challenge::CHALLENGECOMMANDS_GROUP;
 use crate::fun::FUNCOMMANDS_GROUP;
 use crate::game::GAMECOMMANDS_GROUP;
+use crate::general::GENERALCOMMANDS_GROUP;
 
-use crate::commands::interactions::{admin, challenge, fun, game};
-
-#[group]
-#[description = "A group of all general commands."]
-#[summary = "General commands, bitch!"]
-#[commands(ping)]
-struct General;
+use crate::commands::interactions::{admin, challenge, fun, game, general};
 
 struct Handler;
 
@@ -61,7 +54,7 @@ async fn main() {
 
     let fm = StandardFramework::new()
         .configure(|c| c.prefix("?").with_whitespace(true).owners(owner_ids))
-        .group(&GENERAL_GROUP)
+        .group(&GENERALCOMMANDS_GROUP)
         .group(&ADMINCOMMANDS_GROUP)
         .group(&FUNCOMMANDS_GROUP)
         .group(&GAMECOMMANDS_GROUP)
@@ -79,12 +72,6 @@ async fn main() {
     if let Err(why) = client.start().await {
         eprintln!("An error occured: {}", why);
     }
-}
-
-#[command]
-async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.reply_mention(ctx, "Pong!").await?;
-    Ok(())
 }
 
 #[help]
