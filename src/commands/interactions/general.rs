@@ -10,7 +10,7 @@ use serenity::{
 #[group]
 #[description = "Group of general commands."]
 #[summary = "General commands."]
-#[commands(ping, avatar, rank, leaderboard)]
+#[commands(ping, avatar, rank, leaderboard, balance)]
 pub struct GeneralCommands;
 
 #[command]
@@ -44,5 +44,13 @@ async fn avatar(ctx: &Context, msg: &Message) -> CommandResult {
 #[aliases("lb")]
 async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
     msg.reply_ping(ctx, "Leaderboard.").await?;
+    Ok(())
+}
+
+#[command]
+#[description = "Get the user's balance."]
+#[aliases("bal")]
+async fn balance(ctx: &Context, msg: &Message) -> CommandResult {
+    msg.reply_ping(ctx, "Balance.").await?;
     Ok(())
 }
