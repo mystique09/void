@@ -1,5 +1,12 @@
 mod commands;
 
+use crate::commands::interactions::{admin, challenge, fun, game, general};
+use admin::ADMINCOMMANDS_GROUP;
+use challenge::CHALLENGECOMMANDS_GROUP;
+use fun::FUNCOMMANDS_GROUP;
+use game::GAMECOMMANDS_GROUP;
+use general::GENERALCOMMANDS_GROUP;
+
 use std::collections::HashSet;
 use std::sync::{Arc, RwLock};
 
@@ -15,14 +22,6 @@ use serenity::model::id::UserId;
 use serenity::model::{channel::Message, gateway::Ready};
 use serenity::prelude::TypeMapKey;
 use sqlx::postgres::PgPool;
-
-use crate::admin::ADMINCOMMANDS_GROUP;
-use crate::challenge::CHALLENGECOMMANDS_GROUP;
-use crate::fun::FUNCOMMANDS_GROUP;
-use crate::game::GAMECOMMANDS_GROUP;
-use crate::general::GENERALCOMMANDS_GROUP;
-
-use crate::commands::interactions::{admin, challenge, fun, game, general};
 
 struct BotDb;
 
