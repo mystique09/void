@@ -65,7 +65,7 @@ async fn main() {
         Err(why) => panic!("Error: {}", why),
     };
 
-    let _db = PgPool::connect(&db_config).await.unwrap();
+    let db = PgPool::connect(&db_config).await.unwrap();
 
     let fm = StandardFramework::new()
         .configure(|c| c.prefix("?").with_whitespace(true).owners(owner_ids))
@@ -82,9 +82,11 @@ async fn main() {
         .await
         .unwrap();
 
+    sqlx::migrate!().run(&db).await.unwrap();
+
     {
         let mut data = client.data.write().await;
-        data.insert::<BotDb>(Arc::new(RwLock::new(_db)));
+        data.insert::<BotDb>(Arc::new(RwLock::new(db)));
     }
     client.start().await.unwrap();
 }
