@@ -1,6 +1,7 @@
 mod commands;
 
 use std::collections::HashSet;
+use std::sync::{Arc, RwLock};
 
 use serenity::async_trait;
 use serenity::client::{Client, Context, EventHandler};
@@ -12,6 +13,8 @@ use serenity::framework::standard::{
 use serenity::http::Http;
 use serenity::model::id::UserId;
 use serenity::model::{channel::Message, gateway::Ready};
+use serenity::prelude::TypeMapKey;
+use sqlx::postgres::PgPool;
 
 use crate::admin::ADMINCOMMANDS_GROUP;
 use crate::challenge::CHALLENGECOMMANDS_GROUP;
@@ -20,6 +23,12 @@ use crate::game::GAMECOMMANDS_GROUP;
 use crate::general::GENERALCOMMANDS_GROUP;
 
 use crate::commands::interactions::{admin, challenge, fun, game, general};
+
+struct BotDb;
+
+impl TypeMapKey for BotDb {
+    type Value = Arc<RwLock<PgPool>>;
+}
 
 struct Handler;
 
@@ -32,6 +41,11 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
+    dotenv::dotenv().ok();
+
+    let token = std::env::var("TOKEN").unwrap();
+    let db_config = std::env::var("DB_CONFIG").unwrap();
+
     let http = Http::new_with_token(&std::env::var("TOKEN").unwrap());
 
     let (owner_ids, _bot_id) = match http.get_current_application_info().await {
@@ -52,6 +66,8 @@ async fn main() {
         Err(why) => panic!("Error: {}", why),
     };
 
+    let _db = PgPool::connect(&db_config).await.unwrap();
+
     let fm = StandardFramework::new()
         .configure(|c| c.prefix("?").with_whitespace(true).owners(owner_ids))
         .group(&GENERALCOMMANDS_GROUP)
@@ -61,17 +77,17 @@ async fn main() {
         .group(&CHALLENGECOMMANDS_GROUP)
         .help(&HELP);
 
-    let token = std::env::var("TOKEN").unwrap();
-
     let mut client = Client::builder(token)
         .event_handler(Handler)
         .framework(fm)
         .await
         .unwrap();
 
-    if let Err(why) = client.start().await {
-        eprintln!("An error occured: {}", why);
+    {
+        let mut data = client.data.write().await;
+        data.insert::<BotDb>(Arc::new(RwLock::new(_db)));
     }
+    client.start().await.unwrap();
 }
 
 #[help]
