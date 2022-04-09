@@ -6,9 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+dotenv = "0.15.0"
+
 [dependencies.tokio]
 version = "1.17.0"
 features = ["macros", "rt-multi-thread"]
+
+[dependencies.sqlx]
+version = "0.5.11"
+features = ["runtime-tokio-rustls", "postgres", "uuid", "macros", "migrate", "time"]
 
 [dependencies.serenity]
 version = "0.10.10"
