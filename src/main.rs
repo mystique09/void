@@ -43,10 +43,10 @@ impl EventHandler for Handler {
 async fn main() {
     dotenv::dotenv().ok();
 
-    let token = std::env::var("TOKEN").unwrap();
-    let db_config = std::env::var("DB_CONFIG").unwrap();
+    let token = dotenv::var("TOKEN").unwrap();
+    let db_config = dotenv::var("DB_CONFIG").unwrap();
 
-    let http = Http::new_with_token(&std::env::var("TOKEN").unwrap());
+    let http = Http::new_with_token(&token);
 
     let (owner_ids, _bot_id) = match http.get_current_application_info().await {
         Ok(info) => {
