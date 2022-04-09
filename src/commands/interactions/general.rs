@@ -41,6 +41,7 @@ async fn avatar(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[command]
 #[description = "Get the server's leaderboard."]
+#[aliases("lb")]
 async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
     msg.reply_ping(ctx, "Leaderboard.").await?;
     Ok(())
