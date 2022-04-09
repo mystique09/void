@@ -1,4 +1,5 @@
 mod commands;
+mod db;
 
 use crate::commands::interactions::{admin, challenge, fun, game, general};
 use admin::ADMINCOMMANDS_GROUP;
