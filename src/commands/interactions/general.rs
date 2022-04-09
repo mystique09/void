@@ -21,7 +21,7 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
-#[description = "Fetch the user's rak."]
+#[description = "Fetch the user's rank."]
 async fn rank(ctx: &Context, msg: &Message) -> CommandResult {
     msg.reply_ping(ctx, "Rank #1").await?;
     Ok(())
