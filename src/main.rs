@@ -69,8 +69,7 @@ impl EventHandler for Handler {
                         .unwrap();
                 }
 
-                let add_exp = update_user(&pool, &user).await.unwrap();
-                println!("Exp added: {}", add_exp);
+                update_user(&pool, &user).await.unwrap();
             }
             Err(sqlx::Error::RowNotFound) => {
                 if _new_message.author.bot {
