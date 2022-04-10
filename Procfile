@@ -1,1 +1,1 @@
-web: ./target/release/void
+worker: ./target/release/void
