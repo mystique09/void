@@ -15,7 +15,7 @@ use crate::{
 #[group]
 #[description = "Group of general commands."]
 #[summary = "General commands."]
-#[commands(ping, avatar, rank, leaderboard, balance)]
+#[commands(latency, ping, avatar, rank, leaderboard, balance)]
 pub struct GeneralCommands;
 
 #[command]
@@ -68,6 +68,26 @@ async fn avatar(ctx: &Context, msg: &Message) -> CommandResult {
 #[aliases("lb")]
 async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
     msg.reply_ping(ctx, "Leaderboard.").await?;
+    Ok(())
+}
+
+#[command]
+#[description = "Get the server's latency."]
+async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
+    let user_ping = msg.timestamp;
+    let l_msg = msg
+        .channel_id
+        .say(ctx, "Caculating latency ...")
+        .await
+        .unwrap();
+    l_msg.delete(ctx).await?;
+
+    let latency = (l_msg.timestamp - user_ping).num_milliseconds();
+
+    msg.channel_id
+        .say(ctx, format!("```js\nLatency is {} ms.```", latency))
+        .await?;
+
     Ok(())
 }
 
