@@ -7,6 +7,8 @@ use challenge::CHALLENGECOMMANDS_GROUP;
 use fun::FUNCOMMANDS_GROUP;
 use game::GAMECOMMANDS_GROUP;
 use general::GENERALCOMMANDS_GROUP;
+use serenity::model::guild::Member;
+use serenity::model::prelude::{Activity, OnlineStatus};
 
 use std::collections::HashSet;
 use std::sync::{Arc, RwLock};
@@ -19,7 +21,7 @@ use serenity::framework::standard::{
     help_commands, Args, CommandResult, HelpOptions, StandardFramework,
 };
 use serenity::http::Http;
-use serenity::model::id::UserId;
+use serenity::model::id::{GuildId, UserId};
 use serenity::model::{channel::Message, gateway::Ready};
 use serenity::prelude::TypeMapKey;
 use sqlx::postgres::PgPool;
@@ -34,8 +36,32 @@ struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn ready(&self, _ctx: Context, ready: Ready) {
+    async fn ready(&self, ctx: Context, ready: Ready) {
+        ctx.set_presence(Some(Activity::playing("NeoVim")), OnlineStatus::Online)
+            .await;
         println!("{} is now open.", &ready.user.name);
+    }
+
+    async fn guild_member_addition(&self, _ctx: Context, _guild_id: GuildId, _new_member: Member) {
+        println!(
+            "{} joined the server. ID: {}",
+            _new_member.user.name, _new_member.user.id
+        );
+    }
+
+    async fn guild_member_removal(
+        &self,
+        _ctx: Context,
+        _guild_id: GuildId,
+        _user: serenity::model::prelude::User,
+        _member_data_if_available: Option<Member>,
+    ) {
+        let (user_name, user_id) = match _member_data_if_available {
+            Some(data) => (data.user.name, data.user.id),
+            None => ("unknown".to_string(), UserId::from(0)),
+        };
+
+        println!("{} leave the server, ID: {}", user_name, user_id);
     }
 }
 
@@ -44,7 +70,7 @@ async fn main() {
     dotenv::dotenv().ok();
 
     let token = dotenv::var("TOKEN").unwrap();
-    let db_config = dotenv::var("DB_CONFIG").unwrap();
+    let db_config = dotenv::var("DATABASE_URL").unwrap();
 
     let http = Http::new_with_token(&token);
 
