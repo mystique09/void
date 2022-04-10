@@ -9,6 +9,7 @@ edition = "2021"
 dotenv = "0.15.0"
 mockall = "0.11.0"
 anyhow = "1.0.56"
+chrono = "0.4.19"
 
 [dependencies.tokio]
 version = "1.17.0"
