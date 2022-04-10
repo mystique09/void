@@ -7,6 +7,11 @@ use serenity::{
     model::channel::Message,
 };
 
+use crate::{
+    db::users::{get_user, TUser},
+    BotDb,
+};
+
 #[group]
 #[description = "Group of general commands."]
 #[summary = "General commands."]
@@ -23,7 +28,26 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[description = "Fetch the user's rank."]
 async fn rank(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.reply_ping(ctx, "Rank #1").await?;
+    let db = {
+        let db_read = ctx.data.read().await;
+        db_read.get::<BotDb>().unwrap().clone()
+    };
+
+    let pool = db.read().unwrap().clone();
+
+    let user = get_user(&pool, *msg.author.id.as_u64() as i64)
+        .await
+        .unwrap();
+
+    msg.reply_ping(
+        ctx,
+        format!(
+            "```js\nYour current rank is {}, Exp: ( {}/20 )```",
+            user.get_rank(),
+            user.get_exp()
+        ),
+    )
+    .await?;
     Ok(())
 }
 
@@ -51,6 +75,21 @@ async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
 #[description = "Get the user's balance."]
 #[aliases("bal")]
 async fn balance(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.reply_ping(ctx, "Balance.").await?;
+    let db = {
+        let db_read = ctx.data.read().await;
+        db_read.get::<BotDb>().unwrap().clone()
+    };
+
+    let pool = db.read().unwrap().clone();
+
+    let user = get_user(&pool, *msg.author.id.as_u64() as i64)
+        .await
+        .unwrap();
+
+    msg.reply_ping(
+        ctx,
+        format!("```js\nYour current balance is ${}.```", user.get_balance()),
+    )
+    .await?;
     Ok(())
 }
