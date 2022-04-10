@@ -39,6 +39,7 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         ctx.set_presence(Some(Activity::playing("NeoVim")), OnlineStatus::Online)
             .await;
+
         println!("{} is now open.", &ready.user.name);
     }
 
