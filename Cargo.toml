@@ -7,6 +7,8 @@ edition = "2021"
 
 [dependencies]
 dotenv = "0.15.0"
+mockall = "0.11.0"
+anyhow = "1.0.56"
 
 [dependencies.tokio]
 version = "1.17.0"
@@ -14,7 +16,7 @@ features = ["macros", "rt-multi-thread"]
 
 [dependencies.sqlx]
 version = "0.5.11"
-features = ["runtime-tokio-rustls", "postgres", "uuid", "macros", "migrate", "time"]
+features = ["runtime-tokio-rustls", "postgres", "uuid", "macros", "migrate", "time", "offline"]
 
 [dependencies.serenity]
 version = "0.10.10"
