@@ -2,8 +2,10 @@ mod commands;
 mod db;
 
 use crate::commands::interactions::{admin, challenge, fun, game, general};
+use crate::db::users::{update_user, TUser};
 use admin::ADMINCOMMANDS_GROUP;
 use challenge::CHALLENGECOMMANDS_GROUP;
+use db::users::{get_user, new_user};
 use fun::FUNCOMMANDS_GROUP;
 use game::GAMECOMMANDS_GROUP;
 use general::GENERALCOMMANDS_GROUP;
@@ -41,6 +43,46 @@ impl EventHandler for Handler {
             .await;
 
         println!("{} is now open.", &ready.user.name);
+    }
+
+    async fn message(&self, _ctx: Context, _new_message: Message) {
+        let db = {
+            let db_read = _ctx.data.read().await;
+            db_read.get::<BotDb>().unwrap().clone()
+        };
+
+        let pool = db.read().unwrap().clone();
+
+        let user_id = _new_message.author.id.as_u64();
+
+        let check_user = db::users::get_user(&pool, *user_id as i64).await;
+
+        match check_user {
+            Ok(user) => {
+                if user.get_exp() == 19 {
+                    _new_message
+                        .reply_mention(
+                            _ctx,
+                            format!("Congrats you level up! Rank {}", user.get_rank() + 1),
+                        )
+                        .await
+                        .unwrap();
+                }
+
+                let add_exp = update_user(&pool, &user).await.unwrap();
+                println!("Exp added: {}", add_exp);
+            }
+            Err(sqlx::Error::RowNotFound) => {
+                if _new_message.author.bot {
+                    return;
+                }
+                let uid = new_user(&pool, *user_id as i64).await.unwrap();
+                let new_user = get_user(&pool, uid).await.unwrap();
+
+                println!("New user initialized: {}", new_user.dc_id);
+            }
+            Err(why) => println!("ERRORR: {:?}", why),
+        }
     }
 
     async fn guild_member_addition(&self, _ctx: Context, _guild_id: GuildId, _new_member: Member) {
