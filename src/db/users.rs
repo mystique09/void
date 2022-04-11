@@ -3,6 +3,7 @@ use sqlx::{FromRow, PgPool};
 #[derive(Debug, FromRow, Default)]
 pub struct User {
     pub user_id: i64,
+    pub user_name: String,
     pub dc_id: i64,
     pub user_balance: i64,
     pub user_rank: i64,
@@ -43,7 +44,7 @@ pub async fn get_user(pool: &PgPool, id: i64) -> anyhow::Result<User, sqlx::Erro
     let query = sqlx::query_as!(
         User,
         r#"
-    SELECT user_id, dc_id, user_balance, user_rank, user_exp
+    SELECT user_id, dc_id, user_balance, user_rank, user_exp, user_name
     FROM "user"
     WHERE dc_id = $1
     "#,
@@ -55,14 +56,15 @@ pub async fn get_user(pool: &PgPool, id: i64) -> anyhow::Result<User, sqlx::Erro
     query
 }
 
-pub async fn new_user(pool: &PgPool, id: i64) -> anyhow::Result<i64, sqlx::Error> {
+pub async fn new_user(pool: &PgPool, id: i64, name: String) -> anyhow::Result<i64, sqlx::Error> {
     let query = sqlx::query!(
         r#"
-        INSERT INTO "user"(dc_id)
-        VALUES($1)
+        INSERT INTO "user"(dc_id, user_name)
+        VALUES($1, $2)
         RETURNING dc_id
         "#,
-        id
+        id,
+        name
     )
     .fetch_one(pool)
     .await;
