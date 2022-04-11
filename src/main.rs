@@ -79,7 +79,9 @@ impl EventHandler for Handler {
                 if _new_message.author.bot {
                     return;
                 }
-                let uid = new_user(&pool, *user_id as i64).await.unwrap();
+                let uid = new_user(&pool, *user_id as i64, _new_message.author.name)
+                    .await
+                    .unwrap();
                 let new_user = get_user(&pool, uid).await.unwrap();
 
                 println!("New user initialized: {}", new_user.dc_id);
