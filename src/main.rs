@@ -2,7 +2,7 @@ mod commands;
 mod db;
 
 use crate::commands::interactions::{admin, challenge, fun, game, general};
-use crate::db::users::{update_user, TUser};
+use crate::db::users::{delete_user, update_user, TUser};
 use admin::ADMINCOMMANDS_GROUP;
 use challenge::CHALLENGECOMMANDS_GROUP;
 use db::users::{get_user, new_user};
@@ -46,12 +46,16 @@ impl EventHandler for Handler {
     }
 
     async fn message(&self, _ctx: Context, _new_message: Message) {
-        let db = {
-            let db_read = _ctx.data.read().await;
-            db_read.get::<BotDb>().unwrap().clone()
-        };
-
-        let pool = db.read().unwrap().clone();
+        let pool = _ctx
+            .data
+            .read()
+            .await
+            .get::<BotDb>()
+            .unwrap()
+            .clone()
+            .read()
+            .unwrap()
+            .clone();
 
         let user_id = _new_message.author.id.as_u64();
 
@@ -103,6 +107,19 @@ impl EventHandler for Handler {
             None => ("unknown".to_string(), UserId::from(0)),
         };
 
+        let pool = _ctx
+            .data
+            .read()
+            .await
+            .get::<BotDb>()
+            .unwrap()
+            .clone()
+            .read()
+            .unwrap()
+            .clone();
+
+        delete_user(&pool, *user_id.as_u64() as i64).await.unwrap();
+
         println!("{} leave the server, ID: {}", user_name, user_id);
     }
 }
@@ -137,7 +154,7 @@ async fn main() {
     let db = PgPool::connect(&db_config).await.unwrap();
 
     let fm = StandardFramework::new()
-        .configure(|c| c.prefix("?").with_whitespace(true).owners(owner_ids))
+        .configure(|c| c.prefix("~").with_whitespace(false).owners(owner_ids))
         .group(&GENERALCOMMANDS_GROUP)
         .group(&ADMINCOMMANDS_GROUP)
         .group(&FUNCOMMANDS_GROUP)
