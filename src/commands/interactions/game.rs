@@ -47,10 +47,7 @@ async fn guess(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .unwrap()
         .clone();
 
-    let parse_arg = match args.parse::<u32>() {
-        Ok(num) => num,
-        Err(_) => 0,
-    };
+    let parse_arg = args.parse::<u32>().unwrap_or(0);
 
     if parse_arg == 0 {
         msg.channel_id
