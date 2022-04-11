@@ -5,13 +5,10 @@ use serenity::{
         CommandResult,
     },
     model::channel::Message,
-    utils::Colour,
+    utils::{Color, Colour},
 };
 
-use crate::{
-    db::users::{get_user, TUser},
-    BotDb,
-};
+use crate::{db::users::get_user, BotDb};
 
 #[group]
 #[description = "Group of general commands."]
@@ -37,15 +34,17 @@ async fn rank(ctx: &Context, msg: &Message) -> CommandResult {
         .await
         .unwrap();
 
-    msg.reply_ping(
-        ctx,
-        format!(
-            "```js\nYour current rank is {}, Exp: ( {}/20 )```",
-            user.get_rank(),
-            user.get_exp()
-        ),
-    )
-    .await?;
+    msg.channel_id
+        .send_message(&ctx.http, |m| {
+            m.embed(|e| {
+                e.title(format!("{}'s rank", msg.author.name))
+                    .color(Color::PURPLE)
+                    .description(format!("Rank :crown: {}", user.user_rank))
+                    .timestamp(chrono::Utc::now())
+            })
+        })
+        .await?;
+
     Ok(())
 }
 
@@ -57,7 +56,16 @@ async fn avatar(ctx: &Context, msg: &Message) -> CommandResult {
         .avatar_url()
         .unwrap_or_else(|| msg.author.default_avatar_url());
 
-    msg.reply_ping(ctx, avatar_url).await?;
+    msg.channel_id
+        .send_message(&ctx.http, |m| {
+            m.embed(|e| {
+                e.title(format!("{} avatar", msg.author.name))
+                    .image(avatar_url)
+                    .timestamp(chrono::Utc::now())
+            })
+        })
+        .await?;
+
     Ok(())
 }
 
@@ -78,7 +86,7 @@ async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
 
     let users = sqlx::query!(
         r#"
-    SELECT user_rank, dc_id
+    SELECT user_rank, user_name
     FROM "user"
     WHERE user_id < 11
     ORDER BY user_rank
@@ -89,26 +97,24 @@ async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
     .await
     .unwrap();
 
-    let field_embed = users
-        .into_iter()
-        .map(|user| {
-            (
-                format!("<@&{}>", user.dc_id),
-                format!("Rank {}", user.user_rank),
-                true,
-            )
-        })
-        .collect::<Vec<(String, String, bool)>>()
-        .into_iter();
-
     msg.channel_id
         .send_message(&ctx.http, |m| {
-            m.content("Leaderboard").embed(|e| {
-                e.title(":star: Leaderboard :star:")
+            m.embed(|e| {
+                let embed = e
+                    .title(":star: Leaderboard :star:")
                     .description("Below is the list of top 10 users sorted by their rank")
                     .colour(Colour::BLUE)
-                    .fields(field_embed)
-                    .timestamp(chrono::Utc::now())
+                    .timestamp(chrono::Utc::now());
+
+                users.into_iter().for_each(|user| {
+                    embed.field(
+                        format!(":crown: Rank {}", user.user_rank),
+                        format!("{}", user.user_name),
+                        true,
+                    );
+                });
+
+                embed
             })
         })
         .await?;
@@ -130,7 +136,14 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     let latency = (l_msg.timestamp - user_ping).num_milliseconds();
 
     msg.channel_id
-        .say(ctx, format!("```js\nLatency is {} ms.```", latency))
+        .send_message(&ctx.http, |m| {
+            m.embed(|e| {
+                e.title(":rocket: Server Latency :rocket:")
+                    .color(Color::DARK_GREEN)
+                    .description(format!("Latency is {} ms.", latency))
+                    .timestamp(chrono::Utc::now())
+            })
+        })
         .await?;
 
     Ok(())
@@ -155,11 +168,16 @@ async fn balance(ctx: &Context, msg: &Message) -> CommandResult {
         .await
         .unwrap();
 
-    msg.reply_ping(
-        ctx,
-        format!("```js\nYour current balance is ${}.```", user.get_balance()),
-    )
-    .await?;
+    msg.channel_id
+        .send_message(&ctx.http, |m| {
+            m.embed(|e| {
+                e.title(format!("{}'s balance", msg.author.name))
+                    .color(Color::PURPLE)
+                    .description(format!(":moneybag: ${}", user.user_balance))
+                    .timestamp(chrono::Utc::now())
+            })
+        })
+        .await?;
 
     Ok(())
 }
