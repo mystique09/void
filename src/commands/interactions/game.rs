@@ -56,6 +56,7 @@ async fn guess(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         msg.channel_id
             .say(ctx, "Are you dumb? I want a number, not a string!")
             .await?;
+        return Ok(());
     }
 
     let rn = {
@@ -80,7 +81,7 @@ async fn guess(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         msg.reply(
             ctx,
             format!(
-                "Your guess is {}, guessed number is {}. You won $20",
+                "Your guess is {}, guessed number is {}. You won $10",
                 parse_arg, rn
             ),
         )
