@@ -5,6 +5,7 @@ use serenity::{
         CommandResult,
     },
     model::channel::Message,
+    utils::Colour,
 };
 
 use crate::{
@@ -15,25 +16,22 @@ use crate::{
 #[group]
 #[description = "Group of general commands."]
 #[summary = "General commands."]
-#[commands(latency, ping, avatar, rank, leaderboard, balance)]
+#[commands(ping, avatar, rank, leaderboard, balance)]
 pub struct GeneralCommands;
-
-#[command]
-#[description = "Ping command."]
-async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.reply_ping(ctx, "Pong!").await?;
-    Ok(())
-}
 
 #[command]
 #[description = "Fetch the user's rank."]
 async fn rank(ctx: &Context, msg: &Message) -> CommandResult {
-    let db = {
-        let db_read = ctx.data.read().await;
-        db_read.get::<BotDb>().unwrap().clone()
-    };
-
-    let pool = db.read().unwrap().clone();
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<BotDb>()
+        .unwrap()
+        .clone()
+        .read()
+        .unwrap()
+        .clone();
 
     let user = get_user(&pool, *msg.author.id.as_u64() as i64)
         .await
@@ -57,7 +55,7 @@ async fn avatar(ctx: &Context, msg: &Message) -> CommandResult {
     let avatar_url = msg
         .author
         .avatar_url()
-        .unwrap_or(msg.author.default_avatar_url());
+        .unwrap_or_else(|| msg.author.default_avatar_url());
 
     msg.reply_ping(ctx, avatar_url).await?;
     Ok(())
@@ -67,13 +65,60 @@ async fn avatar(ctx: &Context, msg: &Message) -> CommandResult {
 #[description = "Get the server's leaderboard."]
 #[aliases("lb")]
 async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.reply_ping(ctx, "Leaderboard.").await?;
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<BotDb>()
+        .unwrap()
+        .clone()
+        .read()
+        .unwrap()
+        .clone();
+
+    let users = sqlx::query!(
+        r#"
+    SELECT user_rank, dc_id
+    FROM "user"
+    WHERE user_id < 11
+    ORDER BY user_rank
+    DESC
+    "#
+    )
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+
+    let field_embed = users
+        .into_iter()
+        .map(|user| {
+            (
+                format!("<@&{}>", user.dc_id),
+                format!("Rank {}", user.user_rank),
+                true,
+            )
+        })
+        .collect::<Vec<(String, String, bool)>>()
+        .into_iter();
+
+    msg.channel_id
+        .send_message(&ctx.http, |m| {
+            m.content("Leaderboard").embed(|e| {
+                e.title(":star: Leaderboard :star:")
+                    .description("Below is the list of top 10 users sorted by their rank")
+                    .colour(Colour::BLUE)
+                    .fields(field_embed)
+                    .timestamp(chrono::Utc::now())
+            })
+        })
+        .await?;
+
     Ok(())
 }
 
 #[command]
 #[description = "Get the server's latency."]
-async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
+async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     let user_ping = msg.timestamp;
     let l_msg = msg
         .channel_id
@@ -95,12 +140,16 @@ async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
 #[description = "Get the user's balance."]
 #[aliases("bal")]
 async fn balance(ctx: &Context, msg: &Message) -> CommandResult {
-    let db = {
-        let db_read = ctx.data.read().await;
-        db_read.get::<BotDb>().unwrap().clone()
-    };
-
-    let pool = db.read().unwrap().clone();
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<BotDb>()
+        .unwrap()
+        .clone()
+        .read()
+        .unwrap()
+        .clone();
 
     let user = get_user(&pool, *msg.author.id.as_u64() as i64)
         .await
@@ -111,5 +160,6 @@ async fn balance(ctx: &Context, msg: &Message) -> CommandResult {
         format!("```js\nYour current balance is ${}.```", user.get_balance()),
     )
     .await?;
+
     Ok(())
 }
