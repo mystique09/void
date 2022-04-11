@@ -109,7 +109,7 @@ async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
                 users.into_iter().for_each(|user| {
                     embed.field(
                         format!(":crown: Rank {}", user.user_rank),
-                        format!("{}", user.user_name),
+                        user.user_name,
                         true,
                     );
                 });
