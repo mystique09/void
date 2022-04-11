@@ -156,7 +156,7 @@ async fn main() {
     let db = PgPool::connect(&db_config).await.unwrap();
 
     let fm = StandardFramework::new()
-        .configure(|c| c.prefix("~").with_whitespace(false).owners(owner_ids))
+        .configure(|c| c.prefix("?").with_whitespace(false).owners(owner_ids))
         .group(&GENERALCOMMANDS_GROUP)
         .group(&ADMINCOMMANDS_GROUP)
         .group(&FUNCOMMANDS_GROUP)
