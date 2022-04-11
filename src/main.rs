@@ -170,7 +170,9 @@ async fn main() {
         .await
         .unwrap();
 
-    sqlx::migrate!().run(&db).await.unwrap();
+    if let Err(value) = sqlx::migrate!().run(&db).await {
+        println!("Version mismatch {:?}", value);
+    }
 
     {
         let mut data = client.data.write().await;
