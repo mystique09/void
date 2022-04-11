@@ -39,7 +39,7 @@ impl TUser for User {
     }
 }
 
-pub async fn get_user(_pool: &PgPool, _id: i64) -> anyhow::Result<User, sqlx::Error> {
+pub async fn get_user(pool: &PgPool, id: i64) -> anyhow::Result<User, sqlx::Error> {
     let query = sqlx::query_as!(
         User,
         r#"
@@ -47,56 +47,58 @@ pub async fn get_user(_pool: &PgPool, _id: i64) -> anyhow::Result<User, sqlx::Er
     FROM "user"
     WHERE dc_id = $1
     "#,
-        _id
+        id
     )
-    .fetch_one(_pool)
+    .fetch_one(pool)
     .await;
 
     query
 }
 
-pub async fn new_user(_pool: &PgPool, _id: i64) -> anyhow::Result<i64, sqlx::Error> {
+pub async fn new_user(pool: &PgPool, id: i64) -> anyhow::Result<i64, sqlx::Error> {
     let query = sqlx::query!(
         r#"
         INSERT INTO "user"(dc_id)
         VALUES($1)
         RETURNING dc_id
         "#,
-        _id
+        id
     )
-    .fetch_one(_pool)
+    .fetch_one(pool)
     .await;
 
     Ok(query.unwrap().dc_id)
 }
 
-pub async fn update_user(_pool: &PgPool, user: &User) -> anyhow::Result<bool> {
-    let new_exp = (user.user_exp + 1) % 20;
-    let new_rank = {
-        if new_exp == 0 {
-            user.user_rank + 1
-        } else {
-            user.user_rank
-        }
-    };
-
+pub async fn update_user(pool: &PgPool, user: &User) -> anyhow::Result<bool> {
     let query = sqlx::query!(
         r#"
     UPDATE "user"
-    SET user_exp = $1, user_rank = $2
-    WHERE dc_id = $3
+    SET user_exp = (user_exp + 1) % 20
+    ,user_rank = CASE WHEN user_exp = 19
+    THEN user_rank + 1 ELSE user_rank END
+    WHERE dc_id = $1
     "#,
-        new_exp,
-        new_rank,
         user.dc_id
     )
-    .execute(_pool)
+    .execute(pool)
     .await?
     .rows_affected();
 
     Ok(query > 0)
 }
 
-pub async fn delete_user(_pool: &PgPool, _id: i64) -> anyhow::Result<()> {
-    Ok(())
+pub async fn delete_user(pool: &PgPool, id: i64) -> anyhow::Result<bool> {
+    let query = sqlx::query!(
+        r#"
+    DELETE FROM "user"
+    WHERE dc_id = $1
+    "#,
+        id
+    )
+    .execute(pool)
+    .await?
+    .rows_affected();
+
+    Ok(query > 0)
 }
