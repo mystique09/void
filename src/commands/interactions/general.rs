@@ -88,9 +88,9 @@ async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
         r#"
     SELECT user_rank, user_name
     FROM "user"
-    WHERE user_id < 11
     ORDER BY user_rank
     DESC
+    LIMIT 10
     "#
     )
     .fetch_all(&pool)
