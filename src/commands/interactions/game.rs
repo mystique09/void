@@ -55,6 +55,13 @@ async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let amount = args.current().unwrap_or("").parse::<i64>().unwrap_or(4);
     args.advance();
 
+    if amount < 0 {
+        msg.channel_id
+            .say(&ctx.http, "Amount should not be a negative.")
+            .await?;
+        return Ok(());
+    }
+
     let randn_bet = {
         let mut rng = rand::thread_rng();
         let rand_n: u32 = rng.gen_range(1..6);
