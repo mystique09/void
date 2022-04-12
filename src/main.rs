@@ -39,9 +39,9 @@ struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
-        ctx.set_presence(Some(Activity::playing("NeoVim")), OnlineStatus::Online)
-            .await;
+        let activity: Option<Activity> = Some(Activity::playing("NeoVim"));
 
+        ctx.set_presence(activity, OnlineStatus::Online).await;
         println!("{} is now open.", &ready.user.name);
     }
 
@@ -91,10 +91,12 @@ impl EventHandler for Handler {
     }
 
     async fn guild_member_addition(&self, _ctx: Context, _guild_id: GuildId, _new_member: Member) {
-        println!(
-            "{} joined the server. ID: {}",
-            _new_member.user.name, _new_member.user.id
-        );
+        if !_new_member.pending {
+            println!(
+                "{} joined the server. ID: {}",
+                _new_member.user.name, _new_member.user.id
+            );
+        }
     }
 
     async fn guild_member_removal(
