@@ -8,7 +8,10 @@ use serenity::{
     model::channel::Message,
 };
 
-use crate::BotDb;
+use crate::{
+    db::users::{get_user, TUser},
+    BotDb,
+};
 
 #[group]
 #[description = "A group of game commands."]
@@ -32,8 +35,10 @@ async fn roll(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
-#[description = "A guessing game."]
-async fn guess(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+#[description = r#"A guessing game.
+Usage: 
+```\n?game guess {amount | default 4} {bet | default random}```"#]
+async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let user_id = *msg.author.id.as_u64() as i64;
 
     let pool = ctx
@@ -47,28 +52,41 @@ async fn guess(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .unwrap()
         .clone();
 
-    let parse_arg = args.parse::<u32>().unwrap_or(0);
+    let amount = args.current().unwrap_or("").parse::<i64>().unwrap_or(4);
+    args.advance();
 
-    if parse_arg == 0 {
-        msg.channel_id
-            .say(ctx, "Are you dumb? I want a number, not a string!")
-            .await?;
+    let randn_bet = {
+        let mut rng = rand::thread_rng();
+        let rand_n: u32 = rng.gen_range(1..6);
+        rand_n
+    };
+    let bet = args
+        .current()
+        .unwrap_or("")
+        .parse::<u32>()
+        .unwrap_or(randn_bet);
+
+    let user_data = get_user(&pool, user_id).await.unwrap();
+
+    if amount > user_data.get_balance() || user_data.get_balance() < 1 {
+        msg.channel_id.say(&ctx.http, "Not enough balance.").await?;
         return Ok(());
     }
 
     let rn = {
         let mut rng = rand::thread_rng();
-        let random_num: u32 = rng.gen_range(1..5);
+        let random_num: u32 = rng.gen_range(1..6);
         random_num
     };
 
-    if rn == parse_arg {
+    if rn == bet {
         sqlx::query!(
             r#"
         UPDATE "user"
-        SET user_balance = user_balance + 10
-        WHERE dc_id = $1
+        SET user_balance = user_balance + $1
+        WHERE dc_id = $2
         "#,
+            amount,
             user_id
         )
         .execute(&pool)
@@ -78,8 +96,8 @@ async fn guess(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         msg.reply(
             ctx,
             format!(
-                "Your guess is {}, guessed number is {}. You won $10",
-                parse_arg, rn
+                "Your guess is {}, guessed number is {}. You won ${}",
+                bet, rn, amount
             ),
         )
         .await?;
@@ -87,10 +105,12 @@ async fn guess(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         sqlx::query!(
             r#"
         UPDATE "user"
-        SET user_balance = user_balance - 2
-        WHERE dc_id = $1
-        AND user_balance > 0
+        SET user_balance = CASE WHEN (user_balance - $1) < 0
+        THEN 0
+        ELSE user_balance - $1 END
+        WHERE dc_id = $2
         "#,
+            amount,
             user_id
         )
         .execute(&pool)
@@ -100,8 +120,8 @@ async fn guess(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         msg.reply(
             ctx,
             format!(
-                "Your guess is {}, guessed number is {}. You lose.",
-                parse_arg, rn
+                "Your guess is {}, guessed number is {}. You lose ${}.",
+                bet, rn, amount
             ),
         )
         .await?;
