@@ -39,7 +39,7 @@ async fn rank(ctx: &Context, msg: &Message) -> CommandResult {
             m.embed(|e| {
                 e.title(format!("{}'s rank", msg.author.name))
                     .color(Color::PURPLE)
-                    .description(format!("Rank :crown: {}", user.user_rank))
+                    .description(format!(":crown: Rank {}", user.user_rank))
                     .timestamp(chrono::Utc::now())
             })
         })
