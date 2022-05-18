@@ -11,6 +11,6 @@ revert:
 	sqlx migrate revert
 
 add:
-	sqlx migrate add -r $(desc)
+	sqlx migrate add -r $(des)
 
 .PHONY: setup migrate revert add reset
