@@ -1,0 +1,42 @@
+Enum item_category {
+  consumable
+  upgrade
+  weapon
+  essential
+  box
+}
+
+Enum item_name {
+  common_box
+  rare_box
+  epic_box
+  mythic_box
+  legendary_box
+  apple
+  soup
+  nuke
+  knife
+}
+
+Table profile {
+  id bigserial [pk, increment, unique]
+  uid varchar [not null, unique]
+  username varchar [not null, unique]
+  rank bigint [default: 1, not null]
+  exp int [default: 0, not null]
+  wallet bigint [default: 1000, note: 'The user wallet balance.', not null]
+  bank bigint [default: 0, note: 'The user\'s bank.', not null]
+  diamond bigint [default:  0, note: 'Diamond for premium items.', not null]
+  guild_id varchar [not null]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
+
+Table item {
+  id int [increment]
+  item_owner varchar [not null, ref: > profile.uid]
+  name item_name [not null]
+  category item_category [not null]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
