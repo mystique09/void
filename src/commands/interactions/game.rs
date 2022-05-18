@@ -8,10 +8,7 @@ use serenity::{
     model::channel::Message,
 };
 
-use crate::{
-    db::users::{get_user, TUser},
-    BotDb,
-};
+use crate::{db::users::get_user, BotDb};
 
 #[group]
 #[description = "A group of game commands."]
@@ -39,7 +36,7 @@ async fn roll(ctx: &Context, msg: &Message) -> CommandResult {
 Usage: 
 ```\n?game guess {amount | default 4} {bet | default random}```"#]
 async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let user_id = *msg.author.id.as_u64() as i64;
+    let uid = msg.author.id.to_string();
 
     let pool = ctx
         .data
@@ -52,7 +49,7 @@ async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         .unwrap()
         .clone();
 
-    let amount = args.current().unwrap_or("").parse::<i64>().unwrap_or(4);
+    let amount = args.current().unwrap_or("").parse::<i64>().unwrap_or(8);
     args.advance();
 
     if amount < 0 {
@@ -73,9 +70,9 @@ async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         .parse::<u32>()
         .unwrap_or(randn_bet);
 
-    let user_data = get_user(&pool, user_id).await.unwrap();
+    let user_data = get_user(&pool, &uid).await.unwrap();
 
-    if amount > user_data.get_balance() || user_data.get_balance() < 1 {
+    if amount > user_data.wallet || user_data.wallet < 1 {
         msg.channel_id.say(&ctx.http, "Not enough balance.").await?;
         return Ok(());
     }
@@ -89,12 +86,12 @@ async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     if rn == bet {
         sqlx::query!(
             r#"
-        UPDATE "user"
-        SET user_balance = user_balance + $1
-        WHERE dc_id = $2
+        UPDATE "profile"
+        SET wallet = wallet + $1
+        WHERE uid = $2
         "#,
             amount,
-            user_id
+            uid
         )
         .execute(&pool)
         .await?
@@ -111,14 +108,14 @@ async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     } else {
         sqlx::query!(
             r#"
-        UPDATE "user"
-        SET user_balance = CASE WHEN (user_balance - $1) < 0
+        UPDATE "profile"
+        SET wallet = CASE WHEN (wallet - $1) < 0
         THEN 0
-        ELSE user_balance - $1 END
-        WHERE dc_id = $2
+        ELSE wallet - $1 END
+        WHERE uid = $2
         "#,
             amount,
-            user_id
+            uid
         )
         .execute(&pool)
         .await?
@@ -127,8 +124,8 @@ async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         msg.reply(
             ctx,
             format!(
-                "Your guess is {}, guessed number is {}. You lose ${}.",
-                bet, rn, amount
+                "{}, our guess is {}, guessed number is {}. You lose ${}.",
+                user_data.username, bet, rn, amount
             ),
         )
         .await?;

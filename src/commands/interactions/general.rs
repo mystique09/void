@@ -30,16 +30,14 @@ async fn rank(ctx: &Context, msg: &Message) -> CommandResult {
         .unwrap()
         .clone();
 
-    let user = get_user(&pool, *msg.author.id.as_u64() as i64)
-        .await
-        .unwrap();
+    let user = get_user(&pool, &msg.author.id.to_string()).await.unwrap();
 
     msg.channel_id
         .send_message(&ctx.http, |m| {
             m.embed(|e| {
                 e.title(format!("{}'s rank", msg.author.name))
                     .color(Color::PURPLE)
-                    .description(format!(":crown: Rank {}", user.user_rank))
+                    .description(format!(":crown: Rank {}", user.rank))
                     .timestamp(chrono::Utc::now())
             })
         })
@@ -86,9 +84,9 @@ async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
 
     let users = sqlx::query!(
         r#"
-    SELECT user_rank, user_name
-    FROM "user"
-    ORDER BY user_rank
+    SELECT rank, username
+    FROM "profile"
+    ORDER BY rank
     DESC
     LIMIT 10
     "#
@@ -107,11 +105,7 @@ async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
                     .timestamp(chrono::Utc::now());
 
                 users.into_iter().for_each(|user| {
-                    embed.field(
-                        format!(":crown: Rank {}", user.user_rank),
-                        user.user_name,
-                        true,
-                    );
+                    embed.field(format!(":crown: Rank {}", user.rank), user.username, true);
                 });
 
                 embed
@@ -164,16 +158,17 @@ async fn balance(ctx: &Context, msg: &Message) -> CommandResult {
         .unwrap()
         .clone();
 
-    let user = get_user(&pool, *msg.author.id.as_u64() as i64)
-        .await
-        .unwrap();
+    let user = get_user(&pool, &msg.author.id.to_string()).await.unwrap();
 
     msg.channel_id
         .send_message(&ctx.http, |m| {
             m.embed(|e| {
                 e.title(format!("{}'s balance", msg.author.name))
                     .color(Color::PURPLE)
-                    .description(format!(":moneybag: ${}", user.user_balance))
+                    .description(format!(
+                        ":moneybag: **Wallet** ${} \n:bank: **Bank** ${} \n:small_blue_diamond: **Diamonds** ${}",
+                        user.wallet, user.bank, user.diamond
+                    ))
                     .timestamp(chrono::Utc::now())
             })
         })
