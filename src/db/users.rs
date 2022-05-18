@@ -2,51 +2,24 @@ use sqlx::{FromRow, PgPool};
 
 #[derive(Debug, FromRow, Default)]
 pub struct User {
-    pub user_id: i64,
-    pub user_name: String,
-    pub dc_id: i64,
-    pub user_balance: i64,
-    pub user_rank: i64,
-    pub user_exp: i64,
+    pub id: i32,
+    pub username: String,
+    pub uid: String,
+    pub wallet: i64,
+    pub bank: i64,
+    pub diamond: i64,
+    pub rank: i64,
+    pub exp: i32,
+    pub guild_id: String,
 }
 
-pub trait TUser {
-    fn get_id(&self) -> i64;
-    fn get_dc_id(&self) -> i64;
-    fn get_balance(&self) -> i64;
-    fn get_rank(&self) -> i64;
-    fn get_exp(&self) -> i64;
-}
-
-impl TUser for User {
-    fn get_id(&self) -> i64 {
-        self.user_id
-    }
-
-    fn get_dc_id(&self) -> i64 {
-        self.dc_id
-    }
-
-    fn get_balance(&self) -> i64 {
-        self.user_balance
-    }
-
-    fn get_rank(&self) -> i64 {
-        self.user_rank
-    }
-
-    fn get_exp(&self) -> i64 {
-        self.user_exp
-    }
-}
-
-pub async fn get_user(pool: &PgPool, id: i64) -> anyhow::Result<User, sqlx::Error> {
+pub async fn get_user(pool: &PgPool, id: &str) -> anyhow::Result<User, sqlx::Error> {
     let query = sqlx::query_as!(
         User,
         r#"
-    SELECT user_id, dc_id, user_balance, user_rank, user_exp, user_name
-    FROM "user"
-    WHERE dc_id = $1
+    SELECT id, uid, username, wallet,  bank, diamond, rank, exp, guild_id
+    FROM "profile"
+    WHERE uid = $1
     "#,
         id
     )
@@ -56,32 +29,38 @@ pub async fn get_user(pool: &PgPool, id: i64) -> anyhow::Result<User, sqlx::Erro
     query
 }
 
-pub async fn new_user(pool: &PgPool, id: i64, name: String) -> anyhow::Result<i64, sqlx::Error> {
+pub async fn new_user(
+    pool: &PgPool,
+    id: &str,
+    guild: &str,
+    name: &str,
+) -> anyhow::Result<String, sqlx::Error> {
     let query = sqlx::query!(
         r#"
-        INSERT INTO "user"(dc_id, user_name)
-        VALUES($1, $2)
-        RETURNING dc_id
+        INSERT INTO "profile"(uid, username, guild_id)
+        VALUES($1, $2, $3)
+        RETURNING uid
         "#,
         id,
-        name
+        name,
+        guild
     )
     .fetch_one(pool)
     .await;
 
-    Ok(query.unwrap().dc_id)
+    Ok(query.unwrap().uid)
 }
 
-pub async fn update_user(pool: &PgPool, user: &User) -> anyhow::Result<bool> {
+pub async fn set_exp(pool: &PgPool, user: &User) -> anyhow::Result<bool> {
     let query = sqlx::query!(
         r#"
-    UPDATE "user"
-    SET user_exp = (user_exp + 1) % 20
-    ,user_rank = CASE WHEN user_exp = 19
-    THEN user_rank + 1 ELSE user_rank END
-    WHERE dc_id = $1
+    UPDATE "profile"
+    SET exp = (exp + 1) % 20
+    ,rank = CASE WHEN exp = 19
+    THEN rank + 1 ELSE rank END
+    WHERE uid = $1
     "#,
-        user.dc_id
+        user.uid
     )
     .execute(pool)
     .await?
@@ -90,11 +69,11 @@ pub async fn update_user(pool: &PgPool, user: &User) -> anyhow::Result<bool> {
     Ok(query > 0)
 }
 
-pub async fn delete_user(pool: &PgPool, id: i64) -> anyhow::Result<bool> {
+pub async fn delete_user(pool: &PgPool, id: &str) -> anyhow::Result<bool> {
     let query = sqlx::query!(
         r#"
-    DELETE FROM "user"
-    WHERE dc_id = $1
+    DELETE FROM "profile"
+    WHERE uid = $1
     "#,
         id
     )
