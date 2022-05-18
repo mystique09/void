@@ -2,10 +2,9 @@ mod commands;
 mod db;
 
 use crate::commands::interactions::{admin, challenge, fun, game, general};
-use crate::db::users::{delete_user, update_user, TUser};
+use crate::db::users::{delete_user, get_user, new_user, set_exp};
 use admin::ADMINCOMMANDS_GROUP;
 use challenge::CHALLENGECOMMANDS_GROUP;
-use db::users::{get_user, new_user};
 use fun::FUNCOMMANDS_GROUP;
 use game::GAMECOMMANDS_GROUP;
 use general::GENERALCOMMANDS_GROUP;
@@ -46,6 +45,10 @@ impl EventHandler for Handler {
     }
 
     async fn message(&self, _ctx: Context, _new_message: Message) {
+        if _new_message.author.bot {
+            return;
+        }
+
         let pool = _ctx
             .data
             .read()
@@ -57,34 +60,36 @@ impl EventHandler for Handler {
             .unwrap()
             .clone();
 
-        let user_id = _new_message.author.id.as_u64();
+        let user_id = _new_message.author.id.to_string();
+        let guild_id = _new_message.guild_id.unwrap().to_string();
 
-        let check_user = db::users::get_user(&pool, *user_id as i64).await;
+        let check_user = db::users::get_user(&pool, &user_id).await;
 
         match check_user {
             Ok(user) => {
-                if user.get_exp() == 19 {
+                if user.exp == 19 {
                     _new_message
                         .reply_mention(
                             _ctx,
-                            format!("Congrats you level up! Rank {}", user.get_rank() + 1),
+                            format!("Congrats you level up! Rank {}", user.rank + 1),
                         )
                         .await
                         .unwrap();
                 }
 
-                update_user(&pool, &user).await.unwrap();
+                set_exp(&pool, &user).await.unwrap();
             }
             Err(sqlx::Error::RowNotFound) => {
                 if _new_message.author.bot {
-                    return;
+                    ()
                 }
-                let uid = new_user(&pool, *user_id as i64, _new_message.author.name)
+
+                let uid = new_user(&pool, &user_id, &guild_id, &_new_message.author.name)
                     .await
                     .unwrap();
-                let new_user = get_user(&pool, uid).await.unwrap();
+                let new_user = get_user(&pool, &uid).await.unwrap();
 
-                println!("New user initialized: {}", new_user.dc_id);
+                println!("New user initialized: {}", new_user.uid);
             }
             Err(why) => println!("ERRORR: {:?}", why),
         }
@@ -92,10 +97,24 @@ impl EventHandler for Handler {
 
     async fn guild_member_addition(&self, _ctx: Context, _guild_id: GuildId, _new_member: Member) {
         if !_new_member.pending {
-            println!(
-                "{} joined the server. ID: {}",
-                _new_member.user.name, _new_member.user.id
-            );
+            let uid = _new_member.user.id.to_string();
+            let gid = _new_member.guild_id.to_string();
+            let name = _new_member.user.name;
+
+            println!("{} joined the server. ID: {}", name, gid);
+
+            let pool = _ctx
+                .data
+                .read()
+                .await
+                .get::<BotDb>()
+                .unwrap()
+                .clone()
+                .read()
+                .unwrap()
+                .clone();
+
+            new_user(&pool, &uid, &gid, &name).await.unwrap();
         }
     }
 
@@ -122,7 +141,7 @@ impl EventHandler for Handler {
             .unwrap()
             .clone();
 
-        delete_user(&pool, *user_id.as_u64() as i64).await.unwrap();
+        delete_user(&pool, &user_id.to_string()).await.unwrap();
 
         println!("{} leave the server, ID: {}", user_name, user_id);
     }
@@ -158,7 +177,7 @@ async fn main() {
     let db = PgPool::connect(&db_config).await.unwrap();
 
     let fm = StandardFramework::new()
-        .configure(|c| c.prefix("?").with_whitespace(false).owners(owner_ids))
+        .configure(|c| c.prefix("-").with_whitespace(false).owners(owner_ids))
         .group(&GENERALCOMMANDS_GROUP)
         .group(&ADMINCOMMANDS_GROUP)
         .group(&FUNCOMMANDS_GROUP)
