@@ -2,15 +2,15 @@ setup:
 	cp .sample.env .env
 
 migrate:
-	sqlx migrate run
+	cargo sqlx migrate run
 
 reset:
-	sqlx database reset
+	cargo sqlx database reset
 
 revert:
-	sqlx migrate revert
+	cargo sqlx migrate revert
 
 add:
-	sqlx migrate add -r $(des)
+	cargo sqlx migrate add -r $(des)
 
 .PHONY: setup migrate revert add reset
