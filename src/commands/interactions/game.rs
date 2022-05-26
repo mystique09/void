@@ -1,4 +1,5 @@
-use rand::Rng;
+use crate::utils::random_number::randn;
+use crate::{db::users::get_user, BotDb};
 use serenity::{
     client::Context,
     framework::standard::{
@@ -8,7 +9,7 @@ use serenity::{
     model::channel::Message,
 };
 
-use crate::{db::users::get_user, BotDb};
+const DEFAULT_BET: i64 = 20;
 
 #[group]
 #[description = "A group of game commands."]
@@ -34,7 +35,7 @@ async fn roll(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[description = r#"A guessing game.
 Usage: 
-```\n?game guess {amount | default 4} {bet | default random}```"#]
+```\n?game guess {amount => default 20} {guess => default random}```"#]
 async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let uid = msg.author.id.to_string();
 
@@ -49,7 +50,11 @@ async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         .unwrap()
         .clone();
 
-    let amount = args.current().unwrap_or("").parse::<i64>().unwrap_or(8);
+    let amount = args
+        .current()
+        .unwrap_or("")
+        .parse::<i64>()
+        .unwrap_or(DEFAULT_BET);
     args.advance();
 
     if amount < 0 {
@@ -59,16 +64,13 @@ async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         return Ok(());
     }
 
-    let randn_bet = {
-        let mut rng = rand::thread_rng();
-        let rand_n: u32 = rng.gen_range(1..6);
-        rand_n
-    };
-    let bet = args
+    let randn_guess = randn(1..6).await;
+
+    let guess = args
         .current()
         .unwrap_or("")
         .parse::<u32>()
-        .unwrap_or(randn_bet);
+        .unwrap_or(randn_guess);
 
     let user_data = get_user(&pool, &uid).await.unwrap();
 
@@ -77,13 +79,9 @@ async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         return Ok(());
     }
 
-    let rn = {
-        let mut rng = rand::thread_rng();
-        let random_num: u32 = rng.gen_range(1..6);
-        random_num
-    };
+    let rand_n = randn(1..6).await;
 
-    if rn == bet {
+    if rand_n == guess {
         sqlx::query!(
             r#"
         UPDATE "profile"
@@ -100,8 +98,8 @@ async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         msg.reply(
             ctx,
             format!(
-                "Your guess is {}, guessed number is {}. You won ${}",
-                bet, rn, amount
+                "{}, your guess is {}, the correct number is {}. You won ${}.",
+                user_data.username, &guess, &rand_n, amount
             ),
         )
         .await?;
@@ -124,8 +122,8 @@ async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         msg.reply(
             ctx,
             format!(
-                "{}, our guess is {}, guessed number is {}. You lose ${}.",
-                user_data.username, bet, rn, amount
+                "{}, your guess is {}, the correct number is {}. You lose ${}.",
+                user_data.username, &guess, &rand_n, amount
             ),
         )
         .await?;
