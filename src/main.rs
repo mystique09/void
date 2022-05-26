@@ -1,5 +1,6 @@
 mod commands;
 mod db;
+mod utils;
 
 use crate::commands::interactions::{admin, challenge, fun, game, general};
 use crate::db::users::{delete_user, get_user, new_user, set_exp};
@@ -81,7 +82,7 @@ impl EventHandler for Handler {
             }
             Err(sqlx::Error::RowNotFound) => {
                 if _new_message.author.bot {
-                    ()
+                    return;
                 }
 
                 let uid = new_user(&pool, &user_id, &guild_id, &_new_message.author.name)
@@ -177,7 +178,7 @@ async fn main() {
     let db = PgPool::connect(&db_config).await.unwrap();
 
     let fm = StandardFramework::new()
-        .configure(|c| c.prefix("?").with_whitespace(false).owners(owner_ids))
+        .configure(|c| c.prefix("-").with_whitespace(false).owners(owner_ids))
         .group(&GENERALCOMMANDS_GROUP)
         .group(&ADMINCOMMANDS_GROUP)
         .group(&FUNCOMMANDS_GROUP)
