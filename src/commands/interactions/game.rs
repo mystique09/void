@@ -142,7 +142,9 @@ async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[description = "A spin game."]
 async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.reply(ctx, "Shop command.").await?;
+    // get the arguments
+    let args = msg.content.split_whitespace().collect::<Vec<&str>>();
+
     Ok(())
 }
 
