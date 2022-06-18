@@ -19,9 +19,9 @@ const DEFAULT_BET: i64 = 20;
 pub struct GameCommands;
 
 #[command]
-#[description = "A spin game."]
-async fn spin(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.reply(ctx, "Spin game.").await?;
+#[description = "A shop."]
+async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
+    msg.reply(ctx, "Shop.").await?;
     Ok(())
 }
 
@@ -35,7 +35,11 @@ async fn roll(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[description = r#"A guessing game.
 Usage: 
-```\n?game guess {amount => default 20} {guess => default random}```"#]
+```
+?game guess <amount> <guess>
+0 < amount < balance
+0 < guess < 6
+```"#]
 async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let uid = msg.author.id.to_string();
 
@@ -140,10 +144,142 @@ async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
-#[description = "A spin game."]
-async fn shop(ctx: &Context, msg: &Message) -> CommandResult {
-    // get the arguments
-    let args = msg.content.split_whitespace().collect::<Vec<&str>>();
+#[description = r#"A spin game.
+Usage: 
+```
+?game spin <amount> <val>
+0 < amount < balance
+0 < val < 10
+```"#]
+async fn spin(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    // get the user's id
+    let uid = msg.author.id.to_string();
+
+    // get the pool
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<BotDb>()
+        .unwrap()
+        .clone()
+        .read()
+        .unwrap()
+        .clone();
+
+    // get the user's data
+    let user_data = get_user(&pool, &uid).await.unwrap();
+
+    // get the user's wallet
+    let wallet = user_data.wallet;
+
+    // get the user's username
+    let username = user_data.username;
+
+    // check if the user has available balance
+    if wallet < 1 {
+        msg.channel_id.say(&ctx.http, "Not enough balance.").await?;
+        return Ok(());
+    }
+
+    // check if the user has enough arguments
+    if args.len() < 2 {
+        msg.channel_id
+            .say(&ctx.http, "Not enough arguments.")
+            .await?;
+        return Ok(());
+    }
+
+    // validate if the argument is a number
+    let amount = args.current().unwrap().parse::<i64>().unwrap_or(0);
+    args.advance();
+    let bet = args.current().unwrap().parse::<u32>().unwrap_or(0);
+
+    // check if the amount is a positive number
+    if amount < 1 {
+        msg.channel_id
+            .say(&ctx.http, "Amount should be a positive number.")
+            .await?;
+        return Ok(());
+    }
+
+    // check if the amount is less than the user's balance
+    if amount > wallet {
+        msg.channel_id.say(&ctx.http, "Not enough balance.").await?;
+        return Ok(());
+    }
+
+    // check if the bet is a positive number
+    if bet < 1 {
+        msg.channel_id
+            .say(&ctx.http, "Bet should be a positive number.")
+            .await?;
+        return Ok(());
+    }
+
+    // check if the bet is between 1-10
+    if bet > 10 {
+        msg.channel_id
+            .say(&ctx.http, "Bet should be between 1-10.")
+            .await?;
+        return Ok(());
+    }
+
+    // generate random number between 1-10
+    let rand_n = randn(1..10).await;
+
+    // check if the user's guess is correct
+    if rand_n == bet {
+        // update the user's balance
+        sqlx::query!(
+            r#"
+        UPDATE "profile"
+        SET wallet = wallet + $1
+        WHERE uid = $2
+        "#,
+            amount,
+            uid
+        )
+        .execute(&pool)
+        .await?
+        .rows_affected();
+
+        // send the message
+        msg.reply(
+            ctx,
+            format!(
+                "{}, your bet is {}, the result number is {}. You won ${}.",
+                username, &bet, &rand_n, amount
+            ),
+        )
+        .await?;
+    } else {
+        // update the user's balance
+        sqlx::query!(
+            r#"
+        UPDATE "profile"
+        SET wallet = CASE WHEN (wallet - $1) < 0
+        THEN 0
+        ELSE wallet - $1 END
+        WHERE uid = $2
+        "#,
+            amount,
+            uid
+        )
+        .execute(&pool)
+        .await?
+        .rows_affected();
+
+        // send the message
+        msg.reply(
+            ctx,
+            format!(
+                "{}, your bet is {}, the result number is {}. You lose ${}.",
+                username, &bet, &rand_n, amount
+            ),
+        )
+        .await?;
+    }
 
     Ok(())
 }
