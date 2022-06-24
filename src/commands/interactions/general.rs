@@ -1,12 +1,11 @@
 use chrono::Utc;
 use serenity::{
-    builder::CreateEmbed,
     client::Context,
     framework::standard::{
         macros::{command, group},
         CommandResult,
     },
-    model::channel::{Embed, Message},
+    model::channel::{Message},
     utils::{Color, Colour},
 };
 
