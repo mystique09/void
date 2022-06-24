@@ -1,10 +1,12 @@
+use chrono::Utc;
 use serenity::{
+    builder::CreateEmbed,
     client::Context,
     framework::standard::{
         macros::{command, group},
         CommandResult,
     },
-    model::channel::Message,
+    model::channel::{Embed, Message},
     utils::{Color, Colour},
 };
 
@@ -119,25 +121,11 @@ async fn leaderboard(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[description = "Get the server's latency."]
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
-    let user_ping = msg.timestamp;
-    let l_msg = msg
-        .channel_id
-        .say(ctx, "Caculating latency ...")
-        .await
-        .unwrap();
-    l_msg.delete(ctx).await?;
+    let user_tmstmp = msg.timestamp;
+    let now = Utc::now();
+    let ping = (now - user_tmstmp).num_milliseconds();
 
-    let latency = (l_msg.timestamp - user_ping).num_milliseconds();
-
-    msg.channel_id
-        .send_message(&ctx.http, |m| {
-            m.embed(|e| {
-                e.title(":rocket: Server Latency :rocket:")
-                    .color(Color::DARK_GREEN)
-                    .description(format!("Latency is {} ms.", latency))
-                    .timestamp(chrono::Utc::now())
-            })
-        })
+    msg.reply_ping(&ctx.http, format!("```The ping is {} ms.```", ping))
         .await?;
 
     Ok(())
