@@ -71,7 +71,7 @@ async fn pwdgen(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         .send_message(ctx, |m| {
             m.embed(|e| {
                 e.title("Password")
-                    .description(format!("{}", pwd))
+                    .description(pwd.to_string())
                     .color(0x00ff00)
                     .footer(|f| f.text("Click the button to copy it to your clipboard."))
                     .author(|a| a.name("Password Generator"))
