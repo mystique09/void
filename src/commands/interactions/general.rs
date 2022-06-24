@@ -5,7 +5,7 @@ use serenity::{
         macros::{command, group},
         CommandResult,
     },
-    model::channel::{Message},
+    model::channel::Message,
     utils::{Color, Colour},
 };
 
@@ -123,9 +123,13 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     let user_tmstmp = msg.timestamp;
     let now = Utc::now();
     let ping = (now - user_tmstmp).num_milliseconds();
+    let emoji = if ping > 1000 { ":turtle:" } else { ":rocket:" };
 
-    msg.reply_ping(&ctx.http, format!("```The ping is {} ms.```", ping))
-        .await?;
+    msg.reply_ping(
+        &ctx.http,
+        format!("The ping is ```{} ms.``` {}", ping, emoji),
+    )
+    .await?;
 
     Ok(())
 }
