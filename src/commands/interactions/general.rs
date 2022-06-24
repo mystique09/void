@@ -123,11 +123,18 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     let user_tmstmp = msg.timestamp;
     let now = Utc::now();
     let ping = (now - user_tmstmp).num_milliseconds();
-    let emoji = if ping > 1000 { ":turtle:" } else { ":rocket:" };
+    let emoji = match ping {
+        ping if ping < 100 => "🐆🐆🐆",
+        ping if ping > 100 && ping < 500 => "🐆🐆",
+        ping if ping > 500 && ping < 1000 => "🐆",
+        ping if ping > 1000 && ping < 1100 => "🐢",
+        ping if ping > 1100 && ping < 1500 => "🐢🐢",
+        _ => "🐢🐢🐢",
+    };
 
     msg.reply_ping(
         &ctx.http,
-        format!("The ping is ```{} ms.``` {}", ping, emoji),
+        format!("```diff\nThe ping is: {} ms.\nSpeed: {}```", ping, emoji),
     )
     .await?;
 
