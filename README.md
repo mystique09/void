@@ -40,7 +40,7 @@ The bot is made in Rust.
   # or
   cp .sample.env .env
   ```
-- Run `make migrate` to run migrations for database schema.
+- Run `make migrate` to run database migrations.
 - That's it you are now ready to build the bot :smiley:
 
 ### Building
