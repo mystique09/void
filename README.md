@@ -1,4 +1,5 @@
-# Void bot is a general purpose bot, made in serenity-rs.
+# Void
+Void bot is a general purpose bot made with rust and serenity-rs.
 
 > **Warning**
 > Failing, no test, code sucks, only basic functionality works.
@@ -10,7 +11,7 @@ Made with:
 - SQLx
 
 ## Getting Started
-The bot is made in Rust.
+The bot is made with Rust.
 
 ### Prerequisites
 - Rust/Cargo - Make sure you have rust installed in your system. [installation](https://rust-lang.org/tools/install)
