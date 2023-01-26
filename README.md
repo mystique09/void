@@ -1,6 +1,6 @@
 # Void bot is a general purpose bot, made in serenity-rs.
 
-**Warning**
+> **Warning**
 > Failing, no test, code sucks, only basic functionality works.
 
 Made with:
