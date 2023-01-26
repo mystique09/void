@@ -4,11 +4,11 @@ mod utils;
 
 use crate::commands::interactions::{admin, challenge, fun, game, general};
 use crate::db::users::{delete_user, get_user, new_user, set_exp};
-use admin::ADMINCOMMANDS_GROUP;
-use challenge::CHALLENGECOMMANDS_GROUP;
-use fun::FUNCOMMANDS_GROUP;
-use game::GAMECOMMANDS_GROUP;
-use general::GENERALCOMMANDS_GROUP;
+use admin::*;
+use challenge::*;
+use fun::*;
+use game::*;
+use general::*;
 use serenity::model::guild::Member;
 use serenity::model::prelude::{Activity, OnlineStatus};
 
@@ -34,7 +34,7 @@ impl TypeMapKey for BotDb {
     type Value = Arc<RwLock<PgPool>>;
 }
 
-static DEFAULT_PREFIX: &'static str = "?";
+static DEFAULT_PREFIX: &'static str = "!";
 
 struct Handler;
 
@@ -152,7 +152,14 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
-    dotenv::dotenv().ok();
+    match dotenv::dotenv() {
+       Ok(_env) => {
+        println!("ENVIRONMENT VARIABLES LOADED.");
+       },
+       Err(why) => {
+        eprintln!("ERROR: {}", why);
+       }      
+    }
 
     let token = dotenv::var("TOKEN").unwrap();
     let db_config = dotenv::var("DATABASE_URL").unwrap();
