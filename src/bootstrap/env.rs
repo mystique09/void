@@ -11,20 +11,18 @@ impl Env {
     pub fn new() -> Result<Self, dotenv::Error> {
         match dotenv::dotenv() {
             Ok(_env) => {
-             println!("ENVIRONMENT VARIABLES LOADED.");
-             let database_url = env::var("DATABASE_URL").unwrap();
-             let token = env::var("TOKEN").unwrap();
+                println!("ENVIRONMENT VARIABLES LOADED.");
+                let database_url = env::var("DATABASE_URL").unwrap();
+                let token = env::var("TOKEN").unwrap();
 
-             Ok(Self {
-                db_url: Some(database_url),
-                token: Some(token),
-                guild_id: None,
-             })
-            },
-            Err(why) => {
-             Err(why)
-            }      
-         }
+                Ok(Self {
+                    db_url: Some(database_url),
+                    token: Some(token),
+                    guild_id: None,
+                })
+            }
+            Err(why) => Err(why),
+        }
     }
 
     pub fn get_token(&self) -> &String {

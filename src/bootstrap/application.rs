@@ -1,6 +1,6 @@
 use super::database::Database;
 use super::env::Env;
-use crate::bot::bot::Bot;
+use crate::bot::config::Bot;
 
 pub struct Application {
     pub env: Env,
