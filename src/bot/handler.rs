@@ -1,4 +1,11 @@
-use serenity::{async_trait, prelude::{EventHandler, Context}, model::{prelude::{Ready, Activity}, user::OnlineStatus}};
+use serenity::{
+    async_trait,
+    model::{
+        prelude::{Activity, Ready},
+        user::OnlineStatus,
+    },
+    prelude::{Context, EventHandler},
+};
 
 pub struct Handler;
 
