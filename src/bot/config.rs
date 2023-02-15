@@ -1,4 +1,7 @@
-use std::{collections::HashSet, sync::Arc};
+use std::{
+    collections::HashSet,
+    sync::{atomic::AtomicBool, Arc},
+};
 
 use crate::bootstrap::{database::Database, env::Env};
 use serenity::{
@@ -8,13 +11,14 @@ use serenity::{
     Client,
 };
 
-use super::{handler::Handler, DEFAULT_PREFIX};
+use super::{handler::BotHandler, DEFAULT_PREFIX};
 
 pub struct Bot {
     pub client: Client,
 }
 
-struct SharedState;
+pub struct SharedState;
+
 impl TypeMapKey for SharedState {
     type Value = Arc<RwLock<Database>>;
 }
@@ -48,7 +52,9 @@ impl Bot {
         });
 
         let client = Client::builder(env.get_token())
-            .event_handler(Handler)
+            .event_handler(BotHandler {
+                is_parallelized: AtomicBool::new(false),
+            })
             .framework(fm)
             .await
             .unwrap();
