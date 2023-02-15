@@ -17,14 +17,17 @@ pub struct Bot {
     pub client: Client,
 }
 
+#[derive(Debug)]
 pub struct SharedState;
 
 impl TypeMapKey for SharedState {
     type Value = Arc<RwLock<Database>>;
 }
 
+#[derive(Debug)]
 pub struct SharedGuildState;
 
+#[derive(Debug)]
 pub struct Guild {
     pub channels: Vec<ChannelId>,
 }

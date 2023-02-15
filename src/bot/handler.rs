@@ -1,8 +1,9 @@
 use chrono::Utc;
 use serenity::{
     async_trait,
+    http::CacheHttp,
     model::{
-        prelude::{Activity, ChannelId, GuildId, Ready},
+        prelude::{Activity, ChannelId, GuildId, Message, Ready},
         user::OnlineStatus,
     },
     prelude::{Context, EventHandler},
@@ -30,6 +31,18 @@ impl EventHandler for BotHandler {
 
         ctx.set_presence(activity, OnlineStatus::Online).await;
         println!("{} is now open.", &ready.user.name);
+    }
+
+    async fn message(&self, ctx: Context, _message: Message) {
+        let data = ctx
+            .data
+            .read()
+            .await
+            .get::<SharedGuildState>()
+            .unwrap()
+            .clone();
+        let guilds = data.read().await;
+        println!("{:?}", guilds);
     }
 
     async fn cache_ready(&self, ctx: Context, _guilds: Vec<GuildId>) {
