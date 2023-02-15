@@ -7,12 +7,16 @@ use crate::bootstrap::{database::Database, env::Env};
 use serenity::{
     framework::StandardFramework,
     http::Http,
-    model::prelude::ChannelId,
+    model::prelude::{ChannelId, GuildId},
     prelude::{RwLock, TypeMapKey},
     Client,
 };
 
+use super::commands::prefix_commands::general::GENERALCOMMANDS_GROUP;
+use super::commands::prefix_commands::HELP;
+
 use super::{handler::BotHandler, DEFAULT_PREFIX};
+
 pub struct Bot {
     pub client: Client,
 }
@@ -29,11 +33,11 @@ pub struct SharedGuildState;
 
 #[derive(Debug)]
 pub struct Guild {
-    pub channels: Vec<ChannelId>,
+    pub channels: Vec<(String, ChannelId)>,
 }
 
 impl TypeMapKey for SharedGuildState {
-    type Value = Arc<RwLock<HashMap<String, Guild>>>;
+    type Value = Arc<RwLock<HashMap<GuildId, Guild>>>;
 }
 
 impl Bot {
@@ -58,11 +62,14 @@ impl Bot {
             Err(why) => panic!("{why}"),
         };
 
-        let fm = StandardFramework::new().configure(|c| {
-            c.prefix(DEFAULT_PREFIX)
-                .with_whitespace(false)
-                .owners(owners)
-        });
+        let fm = StandardFramework::new()
+            .configure(|c| {
+                c.prefix(DEFAULT_PREFIX)
+                    .with_whitespace(false)
+                    .owners(owners)
+            })
+            .help(&HELP)
+            .group(&GENERALCOMMANDS_GROUP);
 
         let client = Client::builder(env.get_token())
             .event_handler(BotHandler {

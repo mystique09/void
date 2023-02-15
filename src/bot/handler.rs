@@ -1,7 +1,6 @@
 use chrono::Utc;
 use serenity::{
     async_trait,
-    http::CacheHttp,
     model::{
         prelude::{Activity, ChannelId, GuildId, Message, Ready},
         user::OnlineStatus,
@@ -33,7 +32,11 @@ impl EventHandler for BotHandler {
         println!("{} is now open.", &ready.user.name);
     }
 
-    async fn message(&self, ctx: Context, _message: Message) {
+    async fn message(&self, ctx: Context, message: Message) {
+        if message.author.bot {
+            return;
+        };
+
         let data = ctx
             .data
             .read()
@@ -42,10 +45,10 @@ impl EventHandler for BotHandler {
             .unwrap()
             .clone();
         let guilds = data.read().await;
-        println!("{:?}", guilds);
+        println!("{:?}", guilds.get(&message.guild_id.unwrap()));
     }
 
-    async fn cache_ready(&self, ctx: Context, _guilds: Vec<GuildId>) {
+    async fn cache_ready(&self, ctx: Context, guilds: Vec<GuildId>) {
         println!("Cache built successfuly.");
 
         let ctx = Arc::new(ctx);
@@ -74,18 +77,24 @@ impl EventHandler for BotHandler {
         let ctxcpy3 = Arc::clone(&ctx);
 
         tokio::spawn(async move {
-            let guilds = ctxcpy3.cache.guilds().await;
-
             let guilds_cache = {
                 let data = ctxcpy3.data.read().await;
                 data.get::<SharedGuildState>().unwrap().clone()
             };
+
             for guild_id in guilds.iter() {
                 let mut guild_cache_lock = guilds_cache.write().await;
                 let guild = ctxcpy3.cache.guild(guild_id).await.unwrap();
-                let channels = guild.channels.into_iter().map(|c| c.0).collect();
+                let channels = guild
+                    .channels
+                    .into_iter()
+                    .map(|c| {
+                        println!("Guild name: {} Channel name: {}", guild.name, c.1.name());
+                        (c.1.name, c.0)
+                    })
+                    .collect();
 
-                guild_cache_lock.insert(guild.name, crate::bot::config::Guild { channels });
+                guild_cache_lock.insert(guild.id, crate::bot::config::Guild { channels });
             }
         });
     }

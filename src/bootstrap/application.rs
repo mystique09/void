@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use serenity::prelude::RwLock;
+use serenity::{model::prelude::GuildId, prelude::RwLock};
 
 use super::database::Database;
 use super::env::Env;
@@ -22,7 +22,7 @@ impl Application {
     }
 
     pub async fn start(&mut self) {
-        let guild_cache: HashMap<String, Guild> = HashMap::new();
+        let guild_cache: HashMap<GuildId, Guild> = HashMap::new();
 
         self.bot
             .write_data::<SharedState>(Arc::new(RwLock::new(self.db.clone())))
