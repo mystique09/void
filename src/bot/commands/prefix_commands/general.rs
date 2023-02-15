@@ -9,7 +9,7 @@ use serenity::{
     utils::{Color, Colour},
 };
 
-use crate::{db::users::get_user, BotDb};
+use crate::{bot::config::SharedState, db::users::get_user};
 
 #[group]
 #[description = "Group of general commands."]
@@ -24,7 +24,7 @@ async fn rank(ctx: &Context, msg: &Message) -> CommandResult {
         .data
         .read()
         .await
-        .get::<BotDb>()
+        .get::<SharedState>()
         .unwrap()
         .clone()
         .read()

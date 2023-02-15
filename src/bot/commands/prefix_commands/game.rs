@@ -1,5 +1,5 @@
 use crate::utils::random_number::randn;
-use crate::{db::users::get_user, BotDb};
+use crate::{bot::config::SharedState, db::users::get_user};
 use serenity::{
     client::Context,
     framework::standard::{
@@ -47,11 +47,11 @@ async fn guess(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         .data
         .read()
         .await
-        .get::<BotDb>()
+        .get::<SharedState>()
         .unwrap()
         .clone()
         .read()
-        .unwrap()
+        .await
         .clone();
 
     let amount = args
@@ -160,7 +160,7 @@ async fn spin(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         .data
         .read()
         .await
-        .get::<BotDb>()
+        .get::<SharedState>()
         .unwrap()
         .clone()
         .read()
