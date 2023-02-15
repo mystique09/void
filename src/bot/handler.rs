@@ -13,6 +13,8 @@ use std::sync::{
 };
 use std::time::Duration;
 
+use super::config::SharedGuildState;
+
 pub struct BotHandler {
     pub is_parallelized: AtomicBool,
 }
@@ -55,6 +57,24 @@ impl EventHandler for BotHandler {
 
             self.is_parallelized.swap(true, Ordering::Relaxed);
         }
+
+        let ctxcpy3 = Arc::clone(&ctx);
+
+        tokio::spawn(async move {
+            let guilds = ctxcpy3.cache.guilds().await;
+
+            let guilds_cache = {
+                let data = ctxcpy3.data.read().await;
+                data.get::<SharedGuildState>().unwrap().clone()
+            };
+            for guild_id in guilds.iter() {
+                let mut guild_cache_lock = guilds_cache.write().await;
+                let guild = ctxcpy3.cache.guild(guild_id).await.unwrap();
+                let channels = guild.channels.into_iter().map(|c| c.0).collect();
+
+                guild_cache_lock.insert(guild.name, crate::bot::config::Guild { channels });
+            }
+        });
     }
 }
 
