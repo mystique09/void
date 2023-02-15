@@ -1,5 +1,5 @@
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     sync::{atomic::AtomicBool, Arc},
 };
 
@@ -7,12 +7,12 @@ use crate::bootstrap::{database::Database, env::Env};
 use serenity::{
     framework::StandardFramework,
     http::Http,
+    model::prelude::ChannelId,
     prelude::{RwLock, TypeMapKey},
     Client,
 };
 
 use super::{handler::BotHandler, DEFAULT_PREFIX};
-
 pub struct Bot {
     pub client: Client,
 }
@@ -21,6 +21,16 @@ pub struct SharedState;
 
 impl TypeMapKey for SharedState {
     type Value = Arc<RwLock<Database>>;
+}
+
+pub struct SharedGuildState;
+
+pub struct Guild {
+    pub channels: Vec<ChannelId>,
+}
+
+impl TypeMapKey for SharedGuildState {
+    type Value = Arc<RwLock<HashMap<String, Guild>>>;
 }
 
 impl Bot {
@@ -62,9 +72,9 @@ impl Bot {
         Self { client }
     }
 
-    pub async fn write_data(&self, db: &Database) {
+    pub async fn write_data<T: TypeMapKey>(&self, value: T::Value) {
         let mut data = self.client.data.write().await;
-        data.insert::<SharedState>(Arc::new(RwLock::new(db.clone())));
+        data.insert::<T>(value);
     }
 
     pub async fn start(&mut self) {
