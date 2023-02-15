@@ -1,6 +1,10 @@
+use std::{collections::HashMap, sync::Arc};
+
+use serenity::prelude::RwLock;
+
 use super::database::Database;
 use super::env::Env;
-use crate::bot::config::Bot;
+use crate::bot::config::{Bot, Guild, SharedGuildState, SharedState};
 
 pub struct Application {
     pub env: Env,
@@ -18,7 +22,14 @@ impl Application {
     }
 
     pub async fn start(&mut self) {
-        self.bot.write_data(&self.db).await;
+        let guild_cache: HashMap<String, Guild> = HashMap::new();
+
+        self.bot
+            .write_data::<SharedState>(Arc::new(RwLock::new(self.db.clone())))
+            .await;
+        self.bot
+            .write_data::<SharedGuildState>(Arc::new(RwLock::new(guild_cache)))
+            .await;
         self.bot.start().await;
     }
 }
