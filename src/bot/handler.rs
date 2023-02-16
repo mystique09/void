@@ -2,7 +2,11 @@ use chrono::Utc;
 use serenity::{
     async_trait,
     model::{
-        prelude::{Activity, ChannelId, GuildId, Message, Ready},
+        prelude::{
+            command::Command,
+            interaction::{Interaction, InteractionResponseType},
+            Activity, ChannelId, GuildId, Message, Ready,
+        },
         user::OnlineStatus,
     },
     prelude::{Context, EventHandler},
@@ -30,6 +34,37 @@ impl EventHandler for BotHandler {
 
         ctx.set_presence(activity, OnlineStatus::Online).await;
         println!("{} is now open.", &ready.user.name);
+
+        match Command::create_global_application_command(&ctx.http, |command| {
+            super::commands::app_commands::bump::register(command)
+        })
+        .await {
+            Ok(command) => println!("Created global app command: {}", command.name),
+            Err(why) => println!("Error creating global command: {}", why)
+        };
+    }
+
+    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+        if let Interaction::ApplicationCommand(command) = interaction {
+            let ctxcpy = Arc::new(ctx);
+
+            let content = match command.data.name.as_str() {
+                "bump" => {
+                    super::commands::app_commands::bump::run(Arc::clone(&ctxcpy), &command.data.options).await
+                }
+                _ => "not implement".to_string(),
+            };
+
+            if let Err(why) = command
+                .create_interaction_response(&ctxcpy, |r| {
+                    r.kind(InteractionResponseType::ChannelMessageWithSource)
+                        .interaction_response_data(|message| message.content(content))
+                })
+                .await
+            {
+                println!("Cannot respond to slash command: {}", why);
+            }
+        }
     }
 
     async fn message(&self, ctx: Context, message: Message) {
@@ -37,15 +72,13 @@ impl EventHandler for BotHandler {
             return;
         };
 
-        let data = ctx
+        let _data = ctx
             .data
             .read()
             .await
             .get::<SharedGuildState>()
             .unwrap()
             .clone();
-        let guilds = data.read().await;
-        println!("{:?}", guilds.get(&message.guild_id.unwrap()));
     }
 
     async fn cache_ready(&self, ctx: Context, guilds: Vec<GuildId>) {
@@ -84,13 +117,12 @@ impl EventHandler for BotHandler {
 
             for guild_id in guilds.iter() {
                 let mut guild_cache_lock = guilds_cache.write().await;
-                let guild = ctxcpy3.cache.guild(guild_id).await.unwrap();
+                let guild = ctxcpy3.cache.guild(guild_id).unwrap();
                 let channels = guild
                     .channels
                     .into_iter()
                     .map(|c| {
-                        println!("Guild name: {} Channel name: {}", guild.name, c.1.name());
-                        (c.1.name, c.0)
+                        (c.1.to_string(), c.0)
                     })
                     .collect();
 
@@ -134,7 +166,7 @@ async fn log_system_load(ctx: Arc<Context>) {
 
 async fn set_status_current_time(ctx: Arc<Context>) {
     let current_time = Utc::now();
-    let guild_counts = ctx.cache.guild_count().await;
+    let guild_counts = ctx.cache.guild_count();
 
     let formatted = Activity::playing(format!(
         "Waiting for commands in {} guilds.\nCurrent Time: {}",
