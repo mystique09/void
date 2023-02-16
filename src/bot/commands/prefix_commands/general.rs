@@ -21,9 +21,9 @@ async fn info(ctx: &Context, msg: &Message) -> CommandResult {
     let cpu_load = sys_info::loadavg().unwrap();
     let mem_use = sys_info::mem_info().unwrap();
 
-    let user_tmstmp = msg.timestamp;
-    let now = Utc::now();
-    let ping = (now - user_tmstmp).num_milliseconds();
+    let user_tmstmp = msg.timestamp.timestamp_millis();
+    let now = Utc::now().timestamp_millis();
+    let ping = now - user_tmstmp;
     let emoji = match ping {
         ping if ping < 100 => "🐆🐆🐆",
         ping if ping > 100 && ping < 500 => "🐆🐆",
