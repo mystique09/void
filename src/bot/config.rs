@@ -4,11 +4,12 @@ use std::{
 };
 
 use crate::bootstrap::{database::Database, env::Env};
+use chrono::Duration;
 use serenity::{
     framework::StandardFramework,
     http::Http,
-    model::prelude::{ChannelId, GuildId},
-    prelude::{RwLock, TypeMapKey},
+    model::prelude::{ChannelId, GuildId, UserId},
+    prelude::{GatewayIntents, RwLock, TypeMapKey},
     Client,
 };
 
@@ -40,9 +41,15 @@ impl TypeMapKey for SharedGuildState {
     type Value = Arc<RwLock<HashMap<GuildId, Guild>>>;
 }
 
+pub struct SharedBumpState;
+
+impl TypeMapKey for SharedBumpState {
+    type Value = Arc<RwLock<Vec<(UserId, Duration)>>>;
+}
+
 impl Bot {
     pub async fn new(env: &Env) -> Self {
-        let http = Http::new_with_token(env.get_token());
+        let http = Http::new(env.get_token());
 
         let (owners, _bot) = match http.get_current_application_info().await {
             Ok(info) => {
@@ -71,7 +78,7 @@ impl Bot {
             .help(&HELP)
             .group(&GENERALCOMMANDS_GROUP);
 
-        let client = Client::builder(env.get_token())
+        let client = Client::builder(env.get_token(), GatewayIntents::all())
             .event_handler(BotHandler {
                 is_parallelized: AtomicBool::new(false),
             })
