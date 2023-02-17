@@ -1,16 +1,17 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use chrono::Duration;
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
         command::CommandOptionType,
-        interaction::application_command::{CommandDataOption, CommandDataOptionValue}, UserId, ChannelId,
+        interaction::application_command::{CommandDataOption, CommandDataOptionValue},
+        ChannelId, UserId,
     },
     prelude::{Context, Mentionable},
 };
 
-use crate::bot::config::SharedBumpState;
+use crate::bot::init::SharedBumpState;
 
 pub async fn run(ctx: Arc<Context>, options: &[CommandDataOption]) -> String {
     let user = options
@@ -38,10 +39,8 @@ pub async fn run(ctx: Arc<Context>, options: &[CommandDataOption]) -> String {
 
         if let CommandDataOptionValue::String(schedule) = bump_schedule {
             let mut bumps_cache = data.write().await;
-        
-            let bump: Vec<&(UserId, Duration)> = bumps_cache.iter().filter(|b| b.0 == user.id).collect();
 
-            if bump.len() > 0 {
+            if bumps_cache.iter().filter(|b| b.0 == user.id).count() > 0 {
                 return "some already bumped that user".to_string();
             }
 
@@ -81,12 +80,12 @@ async fn schedule_bump(ctx: Arc<Context>, user_id: UserId, dur: Duration) {
         .unwrap()
         .clone();
 
-    println!("Uhh, ok. Bump {} after {}", user_id.mention(), dur.to_string());
+    println!("Uhh, ok. Bump {} after {}", user_id.mention(), dur);
 
     tokio::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_secs(dur.num_seconds() as u64)).await;
         let mut bumps_cache = data.write().await;
-        
+
         let mut i = 0;
 
         for bump in bumps_cache.iter() {
@@ -98,20 +97,22 @@ async fn schedule_bump(ctx: Arc<Context>, user_id: UserId, dur: Duration) {
 
         bumps_cache.remove(i);
 
-        // let bump: Vec<&(UserId, Duration)> = bumps_cache.iter().filter(|b| b.0 == user_id).collect();
-        // let id = bump.get(0).unwrap().0;
-
-        let message = ChannelId(920359624752893952).send_message(&ctx, |m| {
-            m.embed(|e| {
-                e.title("Times up!")
-                .field("Done", format!("Bump {}, welcome back to reality!", user_id.mention()), false)
+        let message = ChannelId(920359624752893952)
+            .send_message(&ctx, |m| {
+                m.embed(|e| {
+                    e.title("Times up!").field(
+                        "Done",
+                        format!("Bump {}, welcome back to reality!", user_id.mention()),
+                        false,
+                    )
+                })
             })
-        }).await;
+            .await;
 
         if let Err(why) = message {
             println!("Error while bumping user: {}", why);
         }
-    }); 
+    });
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
