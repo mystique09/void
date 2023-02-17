@@ -8,7 +8,7 @@ use serenity::{
 
 use super::database::Database;
 use super::env::Env;
-use crate::bot::config::{Bot, Guild, SharedBumpState, SharedGuildState, SharedState};
+use crate::bot::init::{Bot, Guild, SharedBumpState, SharedGuildState, SharedState};
 
 pub struct Application {
     pub env: Env,
@@ -21,7 +21,7 @@ impl Application {
         let env = Env::new().unwrap();
         let db = Database::new(&env).await;
         let bot = Bot::new(&env).await;
-
+        
         Self { env, db, bot }
     }
 

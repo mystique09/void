@@ -1,5 +1,5 @@
 pub mod commands;
-pub mod config;
 pub mod handler;
+pub mod init;
 
 pub const DEFAULT_PREFIX: &str = "!";

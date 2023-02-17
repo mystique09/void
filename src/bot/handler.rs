@@ -17,7 +17,7 @@ use std::sync::{
 };
 use std::time::Duration;
 
-use super::config::SharedGuildState;
+use super::init::SharedGuildState;
 
 pub struct BotHandler {
     pub is_parallelized: AtomicBool,
@@ -36,11 +36,12 @@ impl EventHandler for BotHandler {
         println!("{} is now open.", &ready.user.name);
 
         match Command::create_global_application_command(&ctx.http, |command| {
-            super::commands::app_commands::bump::register(command)
+            super::commands::app_commands::bump::create_bump::register(command)
         })
-        .await {
+        .await
+        {
             Ok(command) => println!("Created global app command: {}", command.name),
-            Err(why) => println!("Error creating global command: {}", why)
+            Err(why) => println!("Error creating global command: {}", why),
         };
     }
 
@@ -50,7 +51,11 @@ impl EventHandler for BotHandler {
 
             let content = match command.data.name.as_str() {
                 "bump" => {
-                    super::commands::app_commands::bump::run(Arc::clone(&ctxcpy), &command.data.options).await
+                    super::commands::app_commands::bump::create_bump::run(
+                        Arc::clone(&ctxcpy),
+                        &command.data.options,
+                    )
+                    .await
                 }
                 _ => "not implement".to_string(),
             };
@@ -121,12 +126,10 @@ impl EventHandler for BotHandler {
                 let channels = guild
                     .channels
                     .into_iter()
-                    .map(|c| {
-                        (c.1.to_string(), c.0)
-                    })
+                    .map(|c| (c.1.to_string(), c.0))
                     .collect();
 
-                guild_cache_lock.insert(guild.id, crate::bot::config::Guild { channels });
+                guild_cache_lock.insert(guild.id, crate::bot::init::Guild { channels });
             }
         });
     }
