@@ -41,6 +41,7 @@ impl TypeMapKey for SharedGuildState {
     type Value = Arc<RwLock<HashMap<GuildId, Guild>>>;
 }
 
+#[derive(Debug)]
 pub struct SharedBumpState;
 
 impl TypeMapKey for SharedBumpState {
