@@ -6,6 +6,8 @@
 
 tasks:
   - init: cargo build && make
-    command: cargo watch -x run
-
-
+    command:
+            |
+             docker start void
+             sqlx migrate
+             cargo watch -x run
