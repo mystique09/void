@@ -1,31 +1,41 @@
+use anyhow::Result;
+use chrono::NaiveDate;
+use serenity::async_trait;
+use sqlx::Error as SqlxError;
+
+// TODO!: add fields
 pub struct User {
-    pub id: i32,
-    pub username: String,
-    pub uid: String,
-    pub wallet: i64,
-    pub bank: i64,
-    pub diamond: i64,
-    pub rank: i64,
-    pub exp: i32,
-    pub guild_id: String,
+    pub id: i64,
+    pub nickname: String,
+    pub created_at: Option<NaiveDate>,
+    pub updated_at: Option<NaiveDate>,
+}
+
+pub struct CreateUserDTO {
+    pub id: i64,
+    pub nickname: String,
 }
 
 pub enum UserError {
     UserNotFound,
 }
 
+#[async_trait]
 pub trait UserRepository {
-    fn get_users() -> Result<Vec<User>, String>;
-    fn get_user_by_id(id: i32) -> Option<User>;
-    fn get_user_by_username(username: &str) -> Option<User>;
-    fn set_user_exp(new_exp: i32) -> Result<i32, String>;
-    fn delete_user(id: i32) -> Result<User, String>;
+    async fn create_user(&self, data: CreateUserDTO) -> Result<User, SqlxError>;
+    async fn get_users(&self) -> Result<Vec<User>, SqlxError>;
+    async fn get_user_by_id(&self, id: i64) -> Result<User, SqlxError>;
+    async fn get_user_by_username(&self, username: &str) -> Result<User, SqlxError>;
+    async fn set_user_exp(&self, new_exp: i32) -> Result<bool>;
+    async fn delete_user(&self, id: i64) -> Result<bool>;
 }
 
+#[async_trait(?Send)]
 pub trait UserUsecase {
-    fn get_users() -> Result<Vec<User>, String>;
-    fn get_user_by_id(id: i32) -> Option<User>;
-    fn get_user_by_username(username: &str) -> Option<User>;
-    fn set_user_exp(new_exp: i32) -> Result<i32, String>;
-    fn delete_user(id: i32) -> Result<User, String>;
+    async fn create_user(&self, data: CreateUserDTO) -> Result<User, SqlxError>;
+    async fn get_users(&self) -> Result<Vec<User>, SqlxError>;
+    async fn get_user_by_id(&self, id: i64) -> Result<User, SqlxError>;
+    async fn get_user_by_username(&self, username: &str) -> Result<User, SqlxError>;
+    async fn set_user_exp(&self, new_exp: i32) -> Result<bool>;
+    async fn delete_user(&self, id: i64) -> Result<bool>;
 }
