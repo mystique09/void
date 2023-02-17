@@ -1,54 +1,90 @@
--- SQL dump generated using DBML (dbml-lang.org)
--- Database: PostgreSQL
--- Generated at: 2022-05-18T08:03:03.373Z
-
-CREATE TYPE "item_category" AS ENUM (
-  'consumable',
-  'upgrade',
-  'weapon',
-  'essential',
-  'box'
+CREATE TYPE "ResponseType" AS ENUM (
+  'SINGLE',
+  'MULTI',
+  'MEDIA'
 );
 
-CREATE TYPE "item_name" AS ENUM (
-  'common_box',
-  'rare_box',
-  'epic_box',
-  'mythic_box',
-  'legendary_box',
-  'apple',
-  'soup',
-  'nuke',
-  'knife'
+CREATE TYPE "ResponseMode" AS ENUM (
+  'REGULAR',
+  'DM'
 );
 
-CREATE TABLE "profile" (
-  "id" SERIAL UNIQUE PRIMARY KEY,
-  "uid" varchar UNIQUE NOT NULL,
-  "username" varchar UNIQUE NOT NULL,
-  "rank" bigint NOT NULL DEFAULT 1,
-  "exp" int NOT NULL DEFAULT 0,
-  "wallet" bigint NOT NULL DEFAULT 1000,
-  "bank" bigint NOT NULL DEFAULT 0,
-  "diamond" bigint NOT NULL DEFAULT 0,
-  "guild_id" varchar NOT NULL,
-  "created_at" timestamptz DEFAULT (now()),
-  "updated_at" timestamptz DEFAULT (now())
+CREATE TYPE "RefreshInterval" AS ENUM (
+  'HOURLY',
+  'DAILY',
+  'WEEKLY',
+  'MONTHLY',
+  'ANNUAL'
 );
 
-CREATE TABLE "item" (
-  "id" SERIAL,
-  "item_owner" varchar NOT NULL,
-  "name" item_name NOT NULL,
-  "category" item_category NOT NULL,
-  "created_at" timestamptz DEFAULT (now()),
-  "updated_at" timestamptz DEFAULT (now())
+CREATE TABLE "users" (
+  "id" bigint UNIQUE PRIMARY KEY NOT NULL,
+  "nickname" varchar NOT NULL,
+  "created_at" date DEFAULT (now()),
+  "updated_at" date DEFAULT (now())
 );
 
-COMMENT ON COLUMN "profile"."wallet" IS 'The user wallet balance.';
+CREATE TABLE "user_roles" (
+  "user_id" bigint PRIMARY KEY,
+  "role_id" bigint
+);
 
-COMMENT ON COLUMN "profile"."bank" IS 'The user"s bank.';
+CREATE TABLE "roles" (
+  "id" bigint UNIQUE PRIMARY KEY NOT NULL,
+  "name" varchar NOT NULL,
+  "created_at" date DEFAULT (now()),
+  "updated_at" date DEFAULT (now())
+);
 
-COMMENT ON COLUMN "profile"."diamond" IS 'Diamond for premium items.';
+CREATE TABLE "keywords" (
+  "id" bigint UNIQUE PRIMARY KEY NOT NULL,
+  "word" varchar NOT NULL,
+  "response" varchar NOT NULL,
+  "response_type" "ResponseType" NOT NULL DEFAULT 'SINGLE',
+  "response_mode" "ResponseMode" NOT NULL DEFAULT 'REGULAR',
+  "created_at" date DEFAULT (now()),
+  "updated_at" date DEFAULT (now())
+);
 
-ALTER TABLE "item" ADD FOREIGN KEY ("item_owner") REFERENCES "profile" ("uid");
+CREATE TABLE "rss_feeds" (
+  "id" bigint UNIQUE PRIMARY KEY NOT NULL,
+  "feed_link" varchar NOT NULL,
+  "channel_id" bigint NOT NULL,
+  "refresh_interval" "RefreshInterval" DEFAULT 'HOURLY',
+  "created_at" date DEFAULT (now()),
+  "updated_at" date DEFAULT (now())
+);
+
+COMMENT ON COLUMN "users"."id" IS 'the id of user in discord(e.g, "421609061495341066").';
+
+COMMENT ON COLUMN "users"."nickname" IS 'discord nickname(do we need to store the previous nicknames? what if the user will change nickname?)';
+
+COMMENT ON TABLE "user_roles" IS 'roles of user contains user and role id';
+
+COMMENT ON TABLE "roles" IS 'Server roles';
+
+COMMENT ON COLUMN "roles"."id" IS 'the id of role in the server, so we can mention it via <@&role-id>';
+
+COMMENT ON COLUMN "roles"."name" IS 'role name lmao';
+
+COMMENT ON TABLE "keywords" IS 'for auto responder';
+
+COMMENT ON COLUMN "keywords"."word" IS 'the word to detect';
+
+COMMENT ON COLUMN "keywords"."response" IS 'the response, can be a gif XD';
+
+COMMENT ON COLUMN "keywords"."response_type" IS 'whether the response is single line(default), multiline or media.';
+
+COMMENT ON COLUMN "keywords"."response_mode" IS 'where to send the response, dm or regular(default)';
+
+COMMENT ON TABLE "rss_feeds" IS 'for rss feeds';
+
+COMMENT ON COLUMN "rss_feeds"."feed_link" IS 'the link of rss feed';
+
+COMMENT ON COLUMN "rss_feeds"."channel_id" IS 'what channel does the feeds must be sent';
+
+COMMENT ON COLUMN "rss_feeds"."refresh_interval" IS 'how often the feed should be sent';
+
+ALTER TABLE "user_roles" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+
+ALTER TABLE "user_roles" ADD FOREIGN KEY ("role_id") REFERENCES "roles" ("id");
