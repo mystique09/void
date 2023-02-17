@@ -9,17 +9,20 @@ edition = "2021"
 dotenv = "0.15.0"
 # mockall = "0.11.0"
 anyhow = "1.0.56"
-chrono = "0.4.19"
+chrono = { version = "0.4.19", default-features = false, features = ["clock"] }
 rand = "0.8.5"
+sys-info = "0.9.1"
+tracing = "0.1.37"
+tracing-subscriber = "0.3.16"
 
 [dependencies.tokio]
 version = "1.17.0"
 features = ["macros", "rt-multi-thread"]
 
 [dependencies.sqlx]
-version = "0.5.11"
-features = ["runtime-tokio-rustls", "postgres", "macros", "migrate", "offline"]
+version = "0.6.2"
+features = ["runtime-tokio-rustls", "postgres", "macros", "migrate", "offline", "chrono", "uuid"]
 
 [dependencies.serenity]
-version = "0.10.10"
+version = "0.11.5"
 default-features = true

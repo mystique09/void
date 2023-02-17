@@ -47,11 +47,11 @@ The bot is made with Rust.
 ### Building
 - Run the bot
   ```
-    cargo run
+  cargo run
   ```
 - Build the bot
   ```
-    cargo b --release
-    # run the bot, the binary is inside target/ directory
-    ./target/release/void
+  cargo b --release
+  # run the bot, the binary is inside target/ directory
+  ./target/release/void
   ```
