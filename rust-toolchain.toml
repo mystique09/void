@@ -1,4 +1,4 @@
 [toolchain]
-channel = "master"
+channel = "stable"
 targets = ["x86_64-unkown-linux-musl"]
 profile = "minimal"
