@@ -2,20 +2,20 @@ use anyhow::Result;
 use serenity::async_trait;
 use sqlx::Error as SqlxError;
 
-use crate::domain;
+use crate::domain::{self, user::UserRepository};
 
-pub struct UserUsecase<'a> {
-    pub repository: &'a dyn domain::user::UserRepository,
+pub struct UserUsecase {
+    pub repository: crate::repository::user_repository::UserRepository,
 }
 
-impl<'a> UserUsecase<'a> {
-    pub fn new(repository: &'a dyn domain::user::UserRepository) -> Self {
+impl UserUsecase {
+    pub fn new(repository: crate::repository::user_repository::UserRepository) -> Self {
         Self { repository }
     }
 }
 
 #[async_trait(?Send)]
-impl<'a> domain::user::UserUsecase for UserUsecase<'a> {
+impl domain::user::UserUsecase for UserUsecase {
     async fn create_user(
         &self,
         data: domain::user::CreateUserDTO,

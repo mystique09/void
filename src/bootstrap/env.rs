@@ -1,5 +1,6 @@
 use dotenv;
 use std::env;
+use tracing::info;
 
 pub struct Env {
     pub db_url: Option<String>,
@@ -11,7 +12,7 @@ impl Env {
     pub fn new() -> Result<Self, dotenv::Error> {
         match dotenv::dotenv() {
             Ok(_env) => {
-                println!("ENVIRONMENT VARIABLES LOADED.");
+                info!("ENVIRONMENT VARIABLES LOADED.");
                 let database_url = env::var("DATABASE_URL").unwrap();
                 let token = env::var("TOKEN").unwrap();
 

@@ -1,15 +1,10 @@
-use std::{
-    collections::{HashMap, HashSet},
-    sync::{atomic::AtomicBool, Arc},
-};
+use std::{collections::HashSet, sync::atomic::AtomicBool};
 
-use crate::bootstrap::{database::Database, env::Env};
-use chrono::Duration;
+use crate::bootstrap::env::Env;
 use serenity::{
     framework::StandardFramework,
     http::Http,
-    model::prelude::{ChannelId, GuildId, UserId},
-    prelude::{GatewayIntents, RwLock, TypeMapKey},
+    prelude::{GatewayIntents, TypeMapKey},
     Client,
 };
 
@@ -20,32 +15,6 @@ use super::{handler::BotHandler, DEFAULT_PREFIX};
 
 pub struct Bot {
     pub client: Client,
-}
-
-#[derive(Debug)]
-pub struct SharedState;
-
-impl TypeMapKey for SharedState {
-    type Value = Arc<RwLock<Database>>;
-}
-
-#[derive(Debug)]
-pub struct SharedGuildState;
-
-#[derive(Debug)]
-pub struct Guild {
-    pub channels: Vec<(String, ChannelId)>,
-}
-
-impl TypeMapKey for SharedGuildState {
-    type Value = Arc<RwLock<HashMap<GuildId, Guild>>>;
-}
-
-#[derive(Debug)]
-pub struct SharedBumpState;
-
-impl TypeMapKey for SharedBumpState {
-    type Value = Arc<RwLock<Vec<(UserId, Duration)>>>;
 }
 
 impl Bot {

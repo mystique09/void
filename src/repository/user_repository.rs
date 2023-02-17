@@ -3,18 +3,18 @@ use anyhow::Result;
 use serenity::async_trait;
 use sqlx::Error as SqlxError;
 
-pub struct UserRepository<'a> {
-    pub conn: &'a Database,
+pub struct UserRepository {
+    pub conn: Database,
 }
 
-impl<'a> UserRepository<'a> {
-    pub fn new(conn: &'a Database) -> Self {
+impl UserRepository {
+    pub fn new(conn: Database) -> Self {
         Self { conn }
     }
 }
 
 #[async_trait]
-impl<'a> domain::user::UserRepository for UserRepository<'a> {
+impl domain::user::UserRepository for UserRepository {
     async fn create_user(
         &self,
         data: domain::user::CreateUserDTO,

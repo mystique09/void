@@ -16,8 +16,9 @@ use std::sync::{
     Arc,
 };
 use std::time::Duration;
+use tracing::{error, info};
 
-use super::init::SharedGuildState;
+use super::shared::SharedGuildState;
 
 pub struct BotHandler {
     pub is_parallelized: AtomicBool,
@@ -33,15 +34,15 @@ impl EventHandler for BotHandler {
         let activity: Option<Activity> = Some(Activity::playing("NeoVim"));
 
         ctx.set_presence(activity, OnlineStatus::Online).await;
-        println!("{} is now open.", &ready.user.name);
+        info!("{} is now open.", &ready.user.name);
 
         match Command::create_global_application_command(&ctx.http, |command| {
             super::commands::app_commands::bump::create_bump::register(command)
         })
         .await
         {
-            Ok(command) => println!("Created global app command: {}", command.name),
-            Err(why) => println!("Error creating global command: {}", why),
+            Ok(command) => error!("Created global app command: {}", command.name),
+            Err(why) => error!("Error creating global command: {}", why),
         };
     }
 
@@ -57,7 +58,7 @@ impl EventHandler for BotHandler {
                     )
                     .await
                 }
-                _ => "not implement".to_string(),
+                _ => "not implemented".to_string(),
             };
 
             if let Err(why) = command
@@ -67,7 +68,7 @@ impl EventHandler for BotHandler {
                 })
                 .await
             {
-                println!("Cannot respond to slash command: {}", why);
+                error!("Cannot respond to slash command: {}", why);
             }
         }
     }
@@ -87,7 +88,7 @@ impl EventHandler for BotHandler {
     }
 
     async fn cache_ready(&self, ctx: Context, guilds: Vec<GuildId>) {
-        println!("Cache built successfuly.");
+        info!("Cache built successfuly.");
 
         let ctx = Arc::new(ctx);
 
@@ -129,7 +130,7 @@ impl EventHandler for BotHandler {
                     .map(|c| (c.1.to_string(), c.0))
                     .collect();
 
-                guild_cache_lock.insert(guild.id, crate::bot::init::Guild { channels });
+                guild_cache_lock.insert(guild.id, crate::bot::shared::Guild { channels });
             }
         });
     }
@@ -163,7 +164,7 @@ async fn log_system_load(ctx: Arc<Context>) {
         })
         .await;
     if let Err(why) = message {
-        eprintln!("Error sending message: {:?}", why);
+        error!("Error sending message: {:?}", why);
     };
 }
 

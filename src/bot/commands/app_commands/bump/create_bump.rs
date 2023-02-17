@@ -10,8 +10,9 @@ use serenity::{
     },
     prelude::{Context, Mentionable},
 };
+use tracing::{error, info};
 
-use crate::bot::init::SharedBumpState;
+use crate::bot::shared::SharedBumpState;
 
 pub async fn run(ctx: Arc<Context>, options: &[CommandDataOption]) -> String {
     let user = options
@@ -57,7 +58,7 @@ pub async fn run(ctx: Arc<Context>, options: &[CommandDataOption]) -> String {
             };
 
             bumps_cache.push((user.id, dur));
-            println!("{:?}", &bumps_cache);
+            info!("Total running bumps: {}", bumps_cache.len());
 
             let ctxcpy = Arc::new(ctx);
             schedule_bump(Arc::clone(&ctxcpy), user.id, dur).await;
@@ -80,7 +81,7 @@ async fn schedule_bump(ctx: Arc<Context>, user_id: UserId, dur: Duration) {
         .unwrap()
         .clone();
 
-    println!("Uhh, ok. Bump {} after {}", user_id.mention(), dur);
+    info!("Uhh, ok. Bump {} after {}", user_id.mention(), dur);
 
     tokio::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_secs(dur.num_seconds() as u64)).await;
@@ -110,7 +111,7 @@ async fn schedule_bump(ctx: Arc<Context>, user_id: UserId, dur: Duration) {
             .await;
 
         if let Err(why) = message {
-            println!("Error while bumping user: {}", why);
+            error!("Error while bumping user: {}", why);
         }
     });
 }
