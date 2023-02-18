@@ -1,0 +1,166 @@
+{
+  "db": "PostgreSQL",
+  "6df049e310c0e3f166229a257bcd1317bc8d273ce7d02b3e84ba312fe26608e0": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int8"
+        },
+        {
+          "name": "nickname",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 2,
+          "type_info": "Date"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 3,
+          "type_info": "Date"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "\n            SELECT * FROM \"users\"\n            WHERE id = $1\n            "
+  },
+  "92cd553ef6c3ba72a3edfb43064ed818a57075732055411951e7ec2030128c8f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "\n                DELETE FROM \"users\"\n                WHERE id = $1\n                "
+  },
+  "9fd32c6289a7355001f5d75d4c89247d09573d43832a8541e6f6a5f89df4f1a6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int8"
+        },
+        {
+          "name": "nickname",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 2,
+          "type_info": "Date"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 3,
+          "type_info": "Date"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO \"users\" (\n            id, nickname\n        ) VALUES (\n            $1, $2\n        )\n        RETURNING *\n        "
+  },
+  "e81464eaebb6c41d8959937f804a8965fbaf8c7c779550563efdd305871e0629": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int8"
+        },
+        {
+          "name": "nickname",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 2,
+          "type_info": "Date"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 3,
+          "type_info": "Date"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "\n        SELECT * FROM \"users\"\n        "
+  },
+  "fbef00b11a1102d819844a9aa3729595f82a0b32f32cb616f76009464576f514": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int8"
+        },
+        {
+          "name": "nickname",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 2,
+          "type_info": "Date"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 3,
+          "type_info": "Date"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n            SELECT * FROM \"users\"\n            WHERE nickname = $1\n            "
+  }
+}
