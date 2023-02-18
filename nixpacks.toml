@@ -1,8 +1,6 @@
-[phases.setup]
-nixPkgs = ['rust', 'sqlx-cli']
+[phases.install]
+cmds = ["...", 'cargo install sqlx-cli --no-default-features --features rustls,postgres']
 
-[phases.build]
-cmd = 'cargo b --release'
-
-[start]
-cmds = ['sqlx migrate', './target/release/void']
+[phases.migrate]
+dependsOn = "build"
+cmds = ["cargo sqlx migrate"]
