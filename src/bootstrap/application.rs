@@ -8,7 +8,7 @@ use serenity::{
 
 use super::database::Database;
 use super::env::Env;
-use crate::bot::shared::{Guild, SharedBumpState, SharedGuildState, SharedEnvState};
+use crate::bot::shared::{Guild, SharedBumpState, SharedEnvState, SharedGuildState};
 use crate::{
     bot::{init::Bot, shared::SharedUserUsecase},
     repository, usecase,
@@ -35,16 +35,11 @@ impl Application {
         };
         let shared_env = Arc::new(RwLock::new(env.clone()));
 
-
         bot.write_data::<SharedEnvState>(shared_env).await;
-        bot
-            .write_data::<SharedUserUsecase>(shared_usecase)
+        bot.write_data::<SharedUserUsecase>(shared_usecase).await;
+        bot.write_data::<SharedGuildState>(Arc::new(RwLock::new(guild_cache)))
             .await;
-        bot
-            .write_data::<SharedGuildState>(Arc::new(RwLock::new(guild_cache)))
-            .await;
-        bot
-            .write_data::<SharedBumpState>(Arc::new(RwLock::new(bump_cache)))
+        bot.write_data::<SharedBumpState>(Arc::new(RwLock::new(bump_cache)))
             .await;
 
         Self { env, db, bot }
