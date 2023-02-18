@@ -1,5 +1,5 @@
 use std::env;
-use tracing::info;
+use tracing::{info, error};
 
 pub struct Env {
     pub db_url: Option<String>,
@@ -9,7 +9,20 @@ pub struct Env {
 
 impl Env {
     pub async fn new() -> Self {
-        info!("ENVIRONMENT VARIABLES LOADED.");
+        match dotenv::from_filename(".sample.env").ok() {
+            Some(prod_env) => info!("production environment variable loaded: {:?}", prod_env),
+            None => {
+                info!("no .sample.env file detected, loading .env file");
+                
+                match dotenv::dotenv().ok() {
+                    Some(dev_env) => {
+                        info!("development environment variable loaded: {:?}", dev_env);
+                    },
+                    None => error!("no .env file detected"),
+                }
+            }
+        }
+
         let database_url = env::var("DATABASE_URL").unwrap();
         let token = env::var("TOKEN").unwrap();
 
