@@ -8,15 +8,6 @@ use serenity::{
 
 use crate::bootstrap::env::Env;
 
-// use crate::bootstrap::database::Database;
-
-// #[derive(Debug)]
-// pub struct SharedState;
-
-// impl TypeMapKey for SharedState {
-//     type Value = Arc<RwLock<Database>>;
-// }
-
 pub struct SharedEnvState;
 
 impl TypeMapKey for SharedEnvState {
