@@ -22,7 +22,7 @@ pub struct Application {
 
 impl Application {
     pub async fn new() -> Self {
-        let env = Env::new().unwrap();
+        let env = Env::new().await;
         let db = Database::new(&env).await;
         let bot = Bot::new(&env).await;
 
