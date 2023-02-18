@@ -1,4 +1,3 @@
-use dotenv;
 use std::env;
 use tracing::info;
 
@@ -9,20 +8,15 @@ pub struct Env {
 }
 
 impl Env {
-    pub fn new() -> Result<Self, dotenv::Error> {
-        match dotenv::dotenv() {
-            Ok(_env) => {
-                info!("ENVIRONMENT VARIABLES LOADED.");
-                let database_url = env::var("DATABASE_URL").unwrap();
-                let token = env::var("TOKEN").unwrap();
+    pub async fn new() -> Self {
+        info!("ENVIRONMENT VARIABLES LOADED.");
+        let database_url = env::var("DATABASE_URL").unwrap();
+        let token = env::var("TOKEN").unwrap();
 
-                Ok(Self {
-                    db_url: Some(database_url),
-                    token: Some(token),
-                    guild_id: None,
-                })
-            }
-            Err(why) => Err(why),
+        Self {
+            db_url: Some(database_url),
+            token: Some(token),
+            guild_id: None,
         }
     }
 
