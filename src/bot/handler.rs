@@ -18,7 +18,7 @@ use std::sync::{
 use std::time::Duration;
 use tracing::{error, info};
 
-use super::shared::{SharedGuildState, SharedEnvState};
+use super::shared::{SharedEnvState, SharedGuildState};
 
 pub struct BotHandler {
     pub is_parallelized: AtomicBool,
@@ -26,7 +26,7 @@ pub struct BotHandler {
 
 // cooldown for sending system resource
 // let's set this to 2 minutes
-const COOLDOWN: u64 = 60;
+const COOLDOWN: u64 = 120;
 
 #[async_trait]
 impl EventHandler for BotHandler {
@@ -41,7 +41,7 @@ impl EventHandler for BotHandler {
         })
         .await
         {
-            Ok(command) => error!("Created global app command: {}", command.name),
+            Ok(command) => info!("Created global app command: {}", command.name),
             Err(why) => error!("Error creating global command: {}", why),
         };
     }
@@ -50,16 +50,12 @@ impl EventHandler for BotHandler {
         if let Interaction::ApplicationCommand(command) = interaction {
             let ctxcpy = Arc::new(ctx);
 
-            let content = match command.data.name.as_str() {
-                "bump" => {
-                    super::commands::app_commands::bump::create_bump::run(
-                        Arc::clone(&ctxcpy),
-                        &command.data.options,
-                    )
-                    .await
-                }
-                _ => "not implemented".to_string(),
-            };
+            let content = super::commands::app_commands::match_app_command(
+                &ctxcpy,
+                &command,
+                &command.data.options,
+            )
+            .await;
 
             if let Err(why) = command
                 .create_interaction_response(&ctxcpy, |r| {
@@ -73,18 +69,10 @@ impl EventHandler for BotHandler {
         }
     }
 
-    async fn message(&self, ctx: Context, message: Message) {
+    async fn message(&self, _ctx: Context, message: Message) {
         if message.author.bot {
             return;
         };
-
-        let _data = ctx
-            .data
-            .read()
-            .await
-            .get::<SharedGuildState>()
-            .unwrap()
-            .clone();
     }
 
     async fn cache_ready(&self, ctx: Context, guilds: Vec<GuildId>) {
@@ -138,12 +126,12 @@ impl EventHandler for BotHandler {
 
 async fn log_system_load(ctx: Arc<Context>) {
     let data = ctx
-    .data
-    .read()
-    .await
-    .get::<SharedEnvState>()
-    .unwrap()
-    .clone();
+        .data
+        .read()
+        .await
+        .get::<SharedEnvState>()
+        .unwrap()
+        .clone();
 
     let cpu_load = sys_info::loadavg().unwrap();
     let mem_use = sys_info::mem_info().unwrap();
