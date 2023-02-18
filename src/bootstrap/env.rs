@@ -1,5 +1,5 @@
 use std::env;
-use tracing::{info, error};
+use tracing::{error, info};
 
 #[derive(Clone)]
 pub struct Env {
@@ -8,7 +8,7 @@ pub struct Env {
     guild_id: Option<String>,
     channel_id: Option<u64>,
     app_id: Option<String>,
-    mode: Option<String>
+    mode: Option<String>,
 }
 
 impl Env {
@@ -17,11 +17,11 @@ impl Env {
             Some(dev_env) => info!("development environment variable loaded: {:?}", dev_env),
             None => {
                 info!("no .env file detected, loading .env file");
-                
+
                 match dotenv::from_filename(".sample.env").ok() {
                     Some(prod_env) => {
-                        info!("production environment variable loaded: {:?}", prod_env);
-                    },
+                        info!("binding env variable: {:?}", prod_env);
+                    }
                     None => error!("no .sample.env file detected"),
                 }
             }
@@ -32,7 +32,7 @@ impl Env {
         let channel_id = env::var("CHANNEL_ID").unwrap();
         let app_id = env::var("APP_ID").unwrap();
         let mode = env::var("MODE").unwrap();
-        let parse_channel_id = u64::from_str_radix(&channel_id, 10).unwrap();
+        let parse_channel_id = channel_id.parse::<u64>().unwrap();
 
         Self {
             db_url: Some(database_url),
@@ -40,7 +40,7 @@ impl Env {
             guild_id: None,
             channel_id: Some(parse_channel_id),
             app_id: Some(app_id),
-            mode: Some(mode)
+            mode: Some(mode),
         }
     }
 
