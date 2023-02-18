@@ -1,20 +1,28 @@
 use std::sync::Arc;
 
+use crate::utils::helpers::{generate_random_bump, generate_random_response};
 use chrono::Duration;
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
         command::CommandOptionType,
-        interaction::application_command::{CommandDataOption, CommandDataOptionValue},
+        interaction::application_command::{
+            ApplicationCommandInteraction, CommandDataOption, CommandDataOptionValue,
+        },
         ChannelId, UserId,
     },
     prelude::{Context, Mentionable},
+    utils::MessageBuilder,
 };
 use tracing::{error, info};
 
 use crate::bot::shared::SharedBumpState;
 
-pub async fn run(ctx: Arc<Context>, options: &[CommandDataOption]) -> String {
+pub async fn run(
+    ctx: Arc<Context>,
+    command: &ApplicationCommandInteraction,
+    options: &[CommandDataOption],
+) -> String {
     let user = options
         .get(0)
         .expect("who to bump?")
@@ -42,7 +50,10 @@ pub async fn run(ctx: Arc<Context>, options: &[CommandDataOption]) -> String {
             let mut bumps_cache = data.write().await;
 
             if bumps_cache.iter().filter(|b| b.0 == user.id).count() > 0 {
-                return "some already bumped that user".to_string();
+                return MessageBuilder::new()
+                    .user(command.user.id)
+                    .push("Someone already bumped that user ")
+                    .build();
             }
 
             let dur = match schedule.as_str() {
@@ -53,17 +64,28 @@ pub async fn run(ctx: Arc<Context>, options: &[CommandDataOption]) -> String {
                 "1d" => Duration::days(1),
                 "1w" => Duration::weeks(1),
                 _ => {
-                    return "invalid time".to_string();
+                    return MessageBuilder::new()
+                        .user(command.user.id)
+                        .push("Invalid choice")
+                        .build();
                 }
             };
 
             bumps_cache.push((user.id, dur));
             info!("Total running bumps: {}", bumps_cache.len());
+            let response = generate_random_bump().await;
 
             let ctxcpy = Arc::new(ctx);
-            schedule_bump(Arc::clone(&ctxcpy), user.id, dur).await;
+            schedule_bump(
+                Arc::clone(&ctxcpy),
+                &response,
+                command.channel_id,
+                user.id,
+                dur,
+            )
+            .await;
 
-            format!("Uhh, ok. Bump {} after {}", &user.name, schedule)
+            response.to_string()
         } else {
             "I am not a magician, please provided a schedule.".to_string()
         }
@@ -72,7 +94,13 @@ pub async fn run(ctx: Arc<Context>, options: &[CommandDataOption]) -> String {
     }
 }
 
-async fn schedule_bump(ctx: Arc<Context>, user_id: UserId, dur: Duration) {
+async fn schedule_bump(
+    ctx: Arc<Context>,
+    response: &str,
+    channel_id: ChannelId,
+    user_id: UserId,
+    dur: Duration,
+) {
     let data = ctx
         .data
         .read()
@@ -81,7 +109,7 @@ async fn schedule_bump(ctx: Arc<Context>, user_id: UserId, dur: Duration) {
         .unwrap()
         .clone();
 
-    info!("Uhh, ok. Bump {} after {}", user_id.mention(), dur);
+    info!("{}", response);
 
     tokio::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_secs(dur.num_seconds() as u64)).await;
@@ -97,16 +125,15 @@ async fn schedule_bump(ctx: Arc<Context>, user_id: UserId, dur: Duration) {
         }
 
         bumps_cache.remove(i);
+        let response = generate_random_response().await;
 
-        let message = ChannelId(1076420188364345435)
-            .send_message(&ctx, |m| {
-                m.embed(|e| {
-                    e.title("Times up!").field(
-                        "Done",
-                        format!("Bump {}, welcome back to reality!", user_id.mention()),
-                        false,
-                    )
-                })
+        let message = channel_id
+            .send_message(&ctx.http, |message| {
+                message.content(format!(
+                    "{} {member}.",
+                    response,
+                    member = user_id.mention()
+                ))
             })
             .await;
 
