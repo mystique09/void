@@ -2,5 +2,5 @@
 cmds = ["...", 'cargo install sqlx-cli --no-default-features --features rustls,postgres']
 
 [phases.migrate]
-dependsOn = "build"
-cmds = ["cargo sqlx migrate"]
+dependsOn = ["build"]
+cmds = ["cargo sqlx migrate run"]
