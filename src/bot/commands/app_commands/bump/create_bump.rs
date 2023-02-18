@@ -47,9 +47,9 @@ pub async fn run(ctx: Arc<Context>, options: &[CommandDataOption]) -> String {
 
             let dur = match schedule.as_str() {
                 "10s" => Duration::seconds(10),
-                "1hr" => Duration::hours(1),
-                "2hrs" => Duration::hours(2),
-                "5hrs" => Duration::hours(5),
+                "1h" => Duration::hours(1),
+                "2h" => Duration::hours(2),
+                "5h" => Duration::hours(5),
                 "1d" => Duration::days(1),
                 "1w" => Duration::weeks(1),
                 _ => {
@@ -98,7 +98,7 @@ async fn schedule_bump(ctx: Arc<Context>, user_id: UserId, dur: Duration) {
 
         bumps_cache.remove(i);
 
-        let message = ChannelId(920359624752893952)
+        let message = ChannelId(1076420188364345435)
             .send_message(&ctx, |m| {
                 m.embed(|e| {
                     e.title("Times up!").field(
@@ -132,6 +132,12 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .name("time")
                 .description("when to bump")
                 .kind(CommandOptionType::String)
+                .add_string_choice("10 seconds", "10s")
+                .add_string_choice("1 hour", "1h")
+                .add_string_choice("2 hours", "2h")
+                .add_string_choice("5 hours", "5h")
+                .add_string_choice("1 day", "1d")
+                .add_string_choice("1 week", "1w")
                 .required(true)
         })
 }

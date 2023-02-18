@@ -18,7 +18,7 @@ use std::sync::{
 use std::time::Duration;
 use tracing::{error, info};
 
-use super::shared::SharedGuildState;
+use super::shared::{SharedGuildState, SharedEnvState};
 
 pub struct BotHandler {
     pub is_parallelized: AtomicBool,
@@ -26,7 +26,7 @@ pub struct BotHandler {
 
 // cooldown for sending system resource
 // let's set this to 2 minutes
-const COOLDOWN: u64 = 120;
+const COOLDOWN: u64 = 60;
 
 #[async_trait]
 impl EventHandler for BotHandler {
@@ -137,12 +137,22 @@ impl EventHandler for BotHandler {
 }
 
 async fn log_system_load(ctx: Arc<Context>) {
+    let data = ctx
+    .data
+    .read()
+    .await
+    .get::<SharedEnvState>()
+    .unwrap()
+    .clone();
+
     let cpu_load = sys_info::loadavg().unwrap();
     let mem_use = sys_info::mem_info().unwrap();
+    let data_lock = data.write().await;
+    let channel_id = data_lock.get_channel_id();
 
     // We can use ChannelId directly to send a message to a specific channel; in this case, the
     // message would be sent to the #testing channel on the discord server.
-    let message = ChannelId(920359624752893952)
+    let message = ChannelId(*channel_id)
         .send_message(&ctx, |m| {
             m.embed(|e| {
                 e.title("System Resource Load")

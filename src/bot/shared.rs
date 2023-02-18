@@ -6,6 +6,8 @@ use serenity::{
     prelude::{RwLock, TypeMapKey},
 };
 
+use crate::bootstrap::env::Env;
+
 // use crate::bootstrap::database::Database;
 
 // #[derive(Debug)]
@@ -14,6 +16,12 @@ use serenity::{
 // impl TypeMapKey for SharedState {
 //     type Value = Arc<RwLock<Database>>;
 // }
+
+pub struct SharedEnvState;
+
+impl TypeMapKey for SharedEnvState {
+    type Value = Arc<RwLock<Env>>;
+}
 
 pub struct SharedUserUsecase;
 
