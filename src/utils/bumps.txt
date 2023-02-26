@@ -18,21 +18,21 @@ I'll keep your bump task on my radar.
 I'll keep track of that bump and remind you.
 I'll be your trusty bump reminder.
 I won't let you forget about that bump.
-Okay, I'll remind you in 2 hours. Just a heads up, I'm not good at tracking time, so please forgive me if I mess up!
-No problem, I'll remind you in 2 hours. Do you need me to remind you about anything else?
-Your reminder is set for 2 hours from now. I hope it helps you stay on track!
-Consider it done. I'll remind you in 2 hours. Until then, take care!
-I'll remember to remind you in 2 hours. But, let's hope that you won't need a reminder at that time!
-I've got your back. I'll remind you in 2 hours. Just don't forget to check your notifications later!
-Okay, I'll remind you in 2 hours. Is there anything else you'd like me to do in the meantime?
-Your reminder is set for 2 hours from now. I hope it helps you stay on top of things!
-I'm on it! I'll remind you in 2 hours. Just remember to check your notifications when the time comes!
-No problem, I'll remind you in 2 hours. Until then, try to take a break and relax!
+Okay, I'll remind you in {}. Just a heads up, I'm not good at tracking time, so please forgive me if I mess up!
+No problem, I'll remind you in {}. Do you need me to remind you about anything else?
+Your reminder is set for {} from now. I hope it helps you stay on track!
+Consider it done. I'll remind you in {}. Until then, take care!
+I'll remember to remind you in {}. But, let's hope that you won't need a reminder at that time!
+I've got your back. I'll remind you in {}. Just don't forget to check your notifications later!
+Okay, I'll remind you in {}. Is there anything else you'd like me to do in the meantime?
+Your reminder is set for {} from now. I hope it helps you stay on top of things!
+I'm on it! I'll remind you in {}. Just remember to check your notifications when the time comes!
+No problem, I'll remind you in {}. Until then, try to take a break and relax!
 Okay, I'll keep track of that for you. Just make sure to check your notifications later!
-Your reminder is set for 2 hours from now. I hope it helps you stay organized!
-I'll remind you in 2 hours, no problem. Just don't forget to check your notifications when the time comes!
-I'm here to help. I'll remind you in 2 hours. Just try not to get too distracted in the meantime!
-Got it, I'll remind you in 2 hours. Do you need me to do anything else in the meantime?
-Your reminder is set for 2 hours from now. I hope it helps you stay productive!
+Your reminder is set for {} from now. I hope it helps you stay organized!
+I'll remind you in {}, no problem. Just don't forget to check your notifications when the time comes!
+I'm here to help. I'll remind you in {}. Just try not to get too distracted in the meantime!
+Got it, I'll remind you in {}. Do you need me to do anything else in the meantime?
+Your reminder is set for {} from now. I hope it helps you stay productive!
 I'll keep track of that for you. Just remember to check your notifications when it's time!
-No worries, I've got this. I'll remind you in 2 hours. Just try to take it easy until then!
+No worries, I've got this. I'll remind you in {}. Just try to take it easy until then!
