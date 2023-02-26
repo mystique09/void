@@ -71,21 +71,32 @@ pub async fn run(
                 }
             };
 
+            let dur_name = match schedule.as_str() {
+                "10s" => "10 seconds",
+                "1h" => "1 hour",
+                "2h" => "2 hours",
+                "5h" => "5 hours",
+                "1d" => "1 day",
+                "1w" => "1 week",
+                _ => "out of scope",
+            };
+
             bumps_cache.push((user.id, dur));
             info!("Total running bumps: {}", bumps_cache.len());
             let response = generate_random_bump().await;
+            let bump_response = response.to_string().replace("{}", dur_name);
 
             let ctxcpy = Arc::new(ctx);
             schedule_bump(
                 Arc::clone(&ctxcpy),
-                &response,
+                &bump_response,
                 command.channel_id,
                 user.id,
                 dur,
             )
             .await;
 
-            response.to_string()
+            bump_response
         } else {
             "I am not a magician, please provided a schedule.".to_string()
         }
