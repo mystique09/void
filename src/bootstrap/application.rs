@@ -28,7 +28,7 @@ impl Application {
 
         let guild_cache: HashMap<GuildId, Guild> = HashMap::new();
         let bump_cache: Vec<(UserId, Duration)> = vec![];
-        let shared_usecase = {
+        let shared_user_usecase = {
             let user_repo = repository::user_repository::UserRepository::new(db.clone());
             let user_case = usecase::user_usecase::UserUsecase::new(user_repo);
             Arc::new(RwLock::new(user_case))
@@ -36,7 +36,8 @@ impl Application {
         let shared_env = Arc::new(RwLock::new(env.clone()));
 
         bot.write_data::<SharedEnvState>(shared_env).await;
-        bot.write_data::<SharedUserUsecase>(shared_usecase).await;
+        bot.write_data::<SharedUserUsecase>(shared_user_usecase)
+            .await;
         bot.write_data::<SharedGuildState>(Arc::new(RwLock::new(guild_cache)))
             .await;
         bot.write_data::<SharedBumpState>(Arc::new(RwLock::new(bump_cache)))
