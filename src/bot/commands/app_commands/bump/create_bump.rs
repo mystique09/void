@@ -52,7 +52,7 @@ pub async fn run(
             if bumps_cache.iter().filter(|b| b.0 == user.id).count() > 0 {
                 return MessageBuilder::new()
                     .user(command.user.id)
-                    .push("Someone already bumped that user ")
+                    .push("someone already bumped that user")
                     .build();
             }
 
@@ -126,17 +126,31 @@ async fn schedule_bump(
         tokio::time::sleep(std::time::Duration::from_secs(dur.num_seconds() as u64)).await;
         let mut bumps_cache = data.write().await;
 
-        let mut i = 0;
+        /*
+        To cancel a bump, we need to know whether a bump for the user
+        already exist, thus we iterate each bump. If no bump exist then
+        we immediately return the task. I don't know yet if we can cancel a tokio task,
+        I know this is kinda bullshit but hey it works!
+        */
+        let mut i: isize = -1;
 
         for bump in bumps_cache.iter() {
             if bump.0 == user_id {
+                i += 1;
                 break;
             }
             i += 1;
         }
 
-        bumps_cache.remove(i);
+        // if bump is deleted then we immediately return the async task
+        if i == -1 {
+            return;
+        }
+
+        // else remove the bump in cache and bump the user
+        bumps_cache.remove(i as usize);
         let response = generate_random_response().await;
+        info!("{} {member}", &response, member = &user_id.mention());
 
         let message = channel_id
             .send_message(&ctx.http, |message| {
