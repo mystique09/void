@@ -8,6 +8,7 @@ use serenity::{
     model::channel::Message,
     utils::Colour,
 };
+use tracing::error;
 
 #[group]
 #[description = "Group of general commands."]
@@ -18,8 +19,24 @@ pub struct GeneralCommands;
 #[command]
 #[description = "Get the bot info."]
 async fn info(ctx: &Context, msg: &Message) -> CommandResult {
-    let cpu_load = sys_info::loadavg().unwrap();
-    let mem_use = sys_info::mem_info().unwrap();
+    let cpu_load = match sys_info::loadavg() {
+        Ok(cpu) => format!("{:.2}%", cpu.one * 10.0),
+        Err(why) => {
+            error!("{}", why);
+            "not available".to_string()
+        }
+    };
+    let mem_use = match sys_info::mem_info() {
+        Ok(mem) => format!(
+            "{:.2} MB Free out of {:.2}",
+            mem.free as f32 / 1000.0,
+            mem.total as f32 / 1000.0
+        ),
+        Err(why) => {
+            error!("{}", why);
+            "not available".to_string()
+        }
+    };
 
     let user_tmstmp = msg.timestamp.timestamp_millis();
     let now = Utc::now().timestamp_millis();
@@ -41,20 +58,8 @@ async fn info(ctx: &Context, msg: &Message) -> CommandResult {
                     .color(Colour::BLUE)
                     .field("Latency", format!("{ping} ms"), true)
                     .field("Speed Indicator", emoji, true)
-                    .field(
-                        "CPU Load Average",
-                        format!("{:.2}%", cpu_load.one * 10.0),
-                        false,
-                    )
-                    .field(
-                        "Memory Usage",
-                        format!(
-                            "{:.2} MB Free out of {:.2} MB",
-                            mem_use.free as f32 / 1000.0,
-                            mem_use.total as f32 / 1000.0
-                        ),
-                        false,
-                    )
+                    .field("CPU Load Average", cpu_load, false)
+                    .field("Memory Usage", mem_use, false)
                     .author(|a| a.name(author))
             })
         })

@@ -136,8 +136,24 @@ async fn log_system_load(ctx: Arc<Context>) {
         .unwrap()
         .clone();
 
-    let cpu_load = sys_info::loadavg().unwrap();
-    let mem_use = sys_info::mem_info().unwrap();
+    let cpu_load = match sys_info::loadavg() {
+        Ok(cpu) => format!("{:.2}%", cpu.one * 10.0),
+        Err(why) => {
+            error!("{}", why);
+            "not available".to_string()
+        }
+    };
+    let mem_use = match sys_info::mem_info() {
+        Ok(mem) => format!(
+            "{:.2} MB Free out of {:.2}",
+            mem.free as f32 / 1000.0,
+            mem.total as f32 / 1000.0
+        ),
+        Err(why) => {
+            error!("{}", why);
+            "not available".to_string()
+        }
+    };
     let data_lock = data.write().await;
     let channel_id = data_lock.get_channel_id();
 
@@ -147,20 +163,8 @@ async fn log_system_load(ctx: Arc<Context>) {
         .send_message(&ctx, |m| {
             m.embed(|e| {
                 e.title("System Resource Load")
-                    .field(
-                        "CPU Load Average",
-                        format!("{:.2}%", cpu_load.one * 10.0),
-                        false,
-                    )
-                    .field(
-                        "Memory Usage",
-                        format!(
-                            "{:.2} MB Free out of {:.2} MB",
-                            mem_use.free as f32 / 1000.0,
-                            mem_use.total as f32 / 1000.0
-                        ),
-                        false,
-                    )
+                    .field("CPU Load Average", cpu_load, false)
+                    .field("Memory Usage", mem_use, false)
             })
         })
         .await;
