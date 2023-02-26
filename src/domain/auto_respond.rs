@@ -2,16 +2,78 @@ use anyhow::Result;
 use chrono::NaiveDate;
 use serenity::async_trait;
 use sqlx::Error as SqlxError;
+use std::fmt;
 
+#[derive(sqlx::Type)]
+#[sqlx(type_name = "ResponseType")]
 pub enum ResponseType {
     SingleLine,
     MultiLine,
     Media,
 }
 
+impl From<&str> for ResponseType {
+    fn from(v: &str) -> Self {
+        match v {
+            "SINGLE" => Self::SingleLine,
+            "MULTI" => Self::MultiLine,
+            "MEDIA" => Self::Media,
+        }
+    }
+}
+
+impl From<String> for ResponseType {
+    fn from(v: String) -> Self {
+        match &*v {
+            "SINGLE" => Self::SingleLine,
+            "MULTI" => Self::MultiLine,
+            "MEDIA" => Self::Media,
+        }
+    }
+}
+
+impl fmt::Display for ResponseType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::SingleLine => write!(f, "SINGLE"),
+            Self::MultiLine => write!(f, "MULTI"),
+            Self::Media => write!(f, "MEDIA"),
+        }
+    }
+}
+
+#[derive(sqlx::Type)]
+#[sqlx(type_name = "ResponseMode")]
 pub enum ResponseMode {
     Regular,
     DirectMessage,
+}
+
+impl From<&str> for ResponseMode {
+    fn from(v: &str) -> Self {
+        match v {
+            "REGULAR" => Self::Regular,
+            "DM" => Self::DirectMessage,
+        }
+    }
+}
+
+impl From<String> for ResponseMode {
+    fn from(v: String) -> Self {
+        match &*v {
+            "REGULAR" => Self::Regular,
+            "DM" => Self::DirectMessage,
+        }
+    }
+}
+
+impl fmt::Display for ResponseMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Regular => write!(f, "REGULAR"),
+            Self::DirectMessage => write!(f, "DM"),
+        }
+    }
 }
 
 pub struct Keyword {
@@ -22,6 +84,20 @@ pub struct Keyword {
     pub response_mode: ResponseMode,
     pub created_at: Option<NaiveDate>,
     pub updated_at: Option<NaiveDate>,
+}
+
+impl From<CreateKeywordDTO> for Keyword {
+    fn from(data: CreateKeywordDTO) -> Self {
+        Self {
+            id: data.id,
+            word: data.word,
+            response: data.response,
+            response_type: data.response_type,
+            response_mode: data.response_mode,
+            created_at: None,
+            updated_at: None,
+        }
+    }
 }
 
 pub struct CreateKeywordDTO {
