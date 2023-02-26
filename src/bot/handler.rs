@@ -1,9 +1,9 @@
+use crate::bot::commands::app_commands::register_commands;
 use chrono::Utc;
 use serenity::{
     async_trait,
     model::{
         prelude::{
-            command::Command,
             interaction::{Interaction, InteractionResponseType},
             Activity, ChannelId, GuildId, Message, Ready,
         },
@@ -36,6 +36,8 @@ impl EventHandler for BotHandler {
         ctx.set_presence(activity, OnlineStatus::Online).await;
         info!("{} is now open.", &ready.user.name);
 
+        register_commands(&ctx).await;
+        /*
         match Command::create_global_application_command(&ctx.http, |command| {
             super::commands::app_commands::bump::create_bump::register(command)
         })
@@ -44,6 +46,7 @@ impl EventHandler for BotHandler {
             Ok(command) => info!("Created global app command: {}", command.name),
             Err(why) => error!("Error creating global command: {}", why),
         };
+        */
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
