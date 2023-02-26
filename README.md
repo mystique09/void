@@ -33,9 +33,12 @@ cargo check
 #### Create a .env file and add a `TOKEN` variable with your discord bot secret key as value, and `DATABASE_URL` and provide db details. *or you can copy the .sample.env file.
 ```
 # what's inside the .sample.env?
-cat .sample.env
-TOKEN=
-DATABASE_URL=postgress://{username}:{password}@localhost/{db_name}
+# cat .sample.env
+# TOKEN=
+# DATABASE_URL=postgres://{username}:{password}@localhost/{db_name}
+# CHANNEL_ID=1076405709916344360
+# APP_ID=
+# MODE=development
 
 # create a .env file
 touch .env
