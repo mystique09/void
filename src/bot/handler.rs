@@ -1,4 +1,4 @@
-use crate::bot::commands::app_commands::register_commands;
+use crate::bot::commands::app_commands::register_global_commands;
 use chrono::Utc;
 use serenity::{
     async_trait,
@@ -36,17 +36,7 @@ impl EventHandler for BotHandler {
         ctx.set_presence(activity, OnlineStatus::Online).await;
         info!("{} is now open.", &ready.user.name);
 
-        register_commands(&ctx).await;
-        /*
-        match Command::create_global_application_command(&ctx.http, |command| {
-            super::commands::app_commands::bump::create_bump::register(command)
-        })
-        .await
-        {
-            Ok(command) => info!("Created global app command: {}", command.name),
-            Err(why) => error!("Error creating global command: {}", why),
-        };
-        */
+        register_global_commands(&ctx).await;
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
@@ -113,6 +103,14 @@ impl EventHandler for BotHandler {
             };
 
             for guild_id in guilds.iter() {
+                /*
+                We register the slash commands for each guild here instead of the ready event,
+                since the guild cache is not yet ready when the bot is ready(well, obviously).
+
+                I don't have any use for this so let's comment it.
+                */
+                // register_local_commands(&ctx, guild_id).await;
+
                 let mut guild_cache_lock = guilds_cache.write().await;
                 let guild = ctxcpy3.cache.guild(guild_id).unwrap();
                 let channels = guild
@@ -157,7 +155,7 @@ async fn log_system_load(ctx: Arc<Context>) {
     let data_lock = data.write().await;
     let channel_id = data_lock.get_channel_id();
 
-    // We can use ChannelId directly to send a message to a specific channel; in this case, the
+    // We can use ChannelId from the env variable you set(IMHO, it should be a logs text channel), directly to send a message to a specific channel; in this case, the
     // message would be sent to the #testing channel on the discord server.
     let message = ChannelId(*channel_id)
         .send_message(&ctx, |m| {

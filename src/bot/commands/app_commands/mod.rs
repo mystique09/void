@@ -2,8 +2,9 @@ use std::sync::Arc;
 
 use serenity::{
     model::prelude::command::Command,
-    model::prelude::interaction::application_command::{
-        ApplicationCommandInteraction, CommandDataOption,
+    model::prelude::{
+        interaction::application_command::{ApplicationCommandInteraction, CommandDataOption},
+        GuildId,
     },
     prelude::Context,
 };
@@ -26,7 +27,29 @@ pub async fn match_app_command(
     }
 }
 
-pub async fn register_commands(ctx: &Context) {
+pub async fn register_local_commands(ctx: &Context, guild_id: &GuildId) {
+    let commands = GuildId::set_application_commands(guild_id, &ctx.http, |commands| {
+        commands
+            .create_application_command(|command| bump::create_bump::register(command))
+            .create_application_command(|command| bump::cancel_bump::register(command))
+    })
+    .await
+    .map_err(|why| {
+        error!(
+            "cannot create local command: {}, for guild: {}",
+            why, guild_id
+        )
+    })
+    .unwrap();
+
+    info!(
+        "created {} slash commands for guild: {}",
+        commands.len(),
+        guild_id
+    );
+}
+
+pub async fn register_global_commands(ctx: &Context) {
     Command::create_global_application_command(&ctx.http, |command| {
         bump::create_bump::register(command)
     })
