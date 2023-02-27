@@ -43,6 +43,11 @@ pub async fn run(
         already exist, thus we iterate each bump. If no bump exist then
         we immediately return the task. I don't know yet if we can cancel a tokio task,
         I know this is kinda bullshit but hey it works!
+
+        What's the downside of this approach?
+        - Even if we delete the bump in the cache,
+          the task is still there running(in sleep mode).
+          We just have to wait for it, and immediately return.
         */
         let mut i: isize = -1;
 
