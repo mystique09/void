@@ -5,7 +5,7 @@ use sqlx::Error as SqlxError;
 use std::fmt;
 
 #[derive(sqlx::Type)]
-#[sqlx(type_name = "ResponseType")]
+#[sqlx(type_name = "ResponseType", rename_all = "lowercase")]
 pub enum ResponseType {
     SingleLine,
     MultiLine,
@@ -18,6 +18,7 @@ impl From<&str> for ResponseType {
             "SINGLE" => Self::SingleLine,
             "MULTI" => Self::MultiLine,
             "MEDIA" => Self::Media,
+            _ => panic!("not supported"),
         }
     }
 }
@@ -28,6 +29,7 @@ impl From<String> for ResponseType {
             "SINGLE" => Self::SingleLine,
             "MULTI" => Self::MultiLine,
             "MEDIA" => Self::Media,
+            _ => panic!("not supported"),
         }
     }
 }
@@ -43,7 +45,7 @@ impl fmt::Display for ResponseType {
 }
 
 #[derive(sqlx::Type)]
-#[sqlx(type_name = "ResponseMode")]
+#[sqlx(type_name = "ResponseMode", rename_all = "lowercase")]
 pub enum ResponseMode {
     Regular,
     DirectMessage,
@@ -54,6 +56,7 @@ impl From<&str> for ResponseMode {
         match v {
             "REGULAR" => Self::Regular,
             "DM" => Self::DirectMessage,
+            _ => panic!("not supported"),
         }
     }
 }
@@ -63,6 +66,7 @@ impl From<String> for ResponseMode {
         match &*v {
             "REGULAR" => Self::Regular,
             "DM" => Self::DirectMessage,
+            _ => panic!("not supported"),
         }
     }
 }
@@ -120,7 +124,9 @@ pub trait KeywordRepository {
     async fn create_keyword(&self, data: CreateKeywordDTO) -> Result<Keyword, SqlxError>;
     async fn get_keyword(&self, id: i64) -> Result<Keyword, SqlxError>;
     async fn get_keywords(&self) -> Result<Vec<Keyword>, SqlxError>;
-    async fn update_keyword(&self, id: i64, data: UpdateKeywordDTO) -> Result<bool>;
+    async fn update_response(&self, id: i64, new_response: &str) -> Result<bool>;
+    async fn update_response_type(&self, id: i64, new_response_type: ResponseType) -> Result<bool>;
+    async fn update_response_mode(&self, id: i64, new_response_mode: ResponseMode) -> Result<bool>;
     async fn delete_keyword(&self, id: i64) -> Result<bool>;
 }
 
@@ -129,6 +135,8 @@ pub trait KeywordUsecase {
     async fn create_keyword(&self, data: CreateKeywordDTO) -> Result<Keyword, SqlxError>;
     async fn get_keyword(&self, id: i64) -> Result<Keyword, SqlxError>;
     async fn get_keywords(&self) -> Result<Vec<Keyword>, SqlxError>;
-    async fn update_keyword(&self, id: i64, data: UpdateKeywordDTO) -> Result<bool>;
+    async fn update_response(&self, id: i64, new_response: &str) -> Result<bool>;
+    async fn update_response_type(&self, id: i64, new_response_type: ResponseType) -> Result<bool>;
+    async fn update_response_mode(&self, id: i64, new_response_mode: ResponseMode) -> Result<bool>;
     async fn delete_keyword(&self, id: i64) -> Result<bool>;
 }
