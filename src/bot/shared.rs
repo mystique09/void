@@ -20,6 +20,12 @@ impl TypeMapKey for SharedUserUsecase {
     type Value = Arc<RwLock<crate::usecase::user_usecase::UserUsecase>>;
 }
 
+pub struct SharedKeywordUsecase;
+
+impl TypeMapKey for SharedKeywordUsecase {
+    type Value = Arc<RwLock<crate::usecase::keyword_usecase::KeywordUsecase>>;
+}
+
 #[derive(Debug)]
 pub struct SharedGuildState;
 
