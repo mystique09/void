@@ -38,15 +38,15 @@ async fn info(ctx: &Context, msg: &Message) -> CommandResult {
         }
     };
 
-    let user_tmstmp = msg.timestamp.timestamp_millis();
-    let now = Utc::now().timestamp_millis();
-    let ping = now - user_tmstmp;
+    let user_tmstmp = msg.timestamp;
+    let now = Utc::now();
+    let ping = now.timestamp_millis() - user_tmstmp.timestamp_millis();
     let emoji = match ping {
-        ping if ping < 100 => "🐆🐆🐆",
-        ping if ping > 100 && ping < 500 => "🐆🐆",
-        ping if ping > 500 && ping < 1000 => "🐆",
-        ping if ping > 1000 && ping < 1100 => "🐢",
-        ping if ping > 1100 && ping < 1500 => "🐢🐢",
+        ping if ping <= 100 => "🐆🐆🐆",
+        ping if ping > 100 && ping <= 500 => "🐆🐆",
+        ping if ping > 500 && ping <= 1000 => "🐆",
+        ping if ping > 1000 && ping <= 1100 => "🐢",
+        ping if ping > 1100 && ping <= 1500 => "🐢🐢",
         _ => "🐢🐢🐢",
     };
     let author = &msg.author.name;
@@ -56,7 +56,7 @@ async fn info(ctx: &Context, msg: &Message) -> CommandResult {
             m.embed(|e| {
                 e.title("Bot Latency")
                     .color(Colour::BLUE)
-                    .field("Latency", format!("{ping} ms"), true)
+                    .field("Latency", format!("{} ms", ping), true)
                     .field("Speed Indicator", emoji, true)
                     .field("CPU Load Average", cpu_load, false)
                     .field("Memory Usage", mem_use, false)
