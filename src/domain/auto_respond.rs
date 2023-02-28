@@ -4,7 +4,7 @@ use serenity::async_trait;
 use sqlx::Error as SqlxError;
 use std::fmt;
 
-#[derive(sqlx::Type)]
+#[derive(sqlx::Type, Debug)]
 #[sqlx(type_name = "ResponseType", rename_all = "lowercase")]
 pub enum ResponseType {
     SingleLine,
@@ -44,7 +44,7 @@ impl fmt::Display for ResponseType {
     }
 }
 
-#[derive(sqlx::Type)]
+#[derive(sqlx::Type, Debug)]
 #[sqlx(type_name = "ResponseMode", rename_all = "lowercase")]
 pub enum ResponseMode {
     Regular,
@@ -80,6 +80,7 @@ impl fmt::Display for ResponseMode {
     }
 }
 
+#[derive(Debug)]
 pub struct Keyword {
     pub id: i64,
     pub word: String,
@@ -130,7 +131,7 @@ pub trait KeywordRepository {
     async fn delete_keyword(&self, id: i64) -> Result<bool>;
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 pub trait KeywordUsecase {
     async fn create_keyword(&self, data: CreateKeywordDTO) -> Result<Keyword, SqlxError>;
     async fn get_keyword(&self, id: i64) -> Result<Keyword, SqlxError>;
