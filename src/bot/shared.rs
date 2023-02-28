@@ -41,15 +41,13 @@ impl TypeMapKey for SharedGuildState {
 
 #[derive(Debug)]
 pub struct SharedBumpState;
-
+type BumpMap = HashMap<GuildId, Vec<(UserId, Duration)>>;
 impl TypeMapKey for SharedBumpState {
-    type Value = Arc<RwLock<Vec<(UserId, Duration)>>>;
+    type Value = Arc<RwLock<BumpMap>>;
 }
 
 pub struct SharedKeywordsState;
-
-type KeywordState = HashMap<GuildId, Vec<crate::domain::auto_respond::Keyword>>;
-
+type KeywordMap = HashMap<GuildId, Vec<crate::domain::auto_respond::Keyword>>;
 impl TypeMapKey for SharedKeywordsState {
-    type Value = Arc<RwLock<KeywordState>>;
+    type Value = Arc<RwLock<KeywordMap>>;
 }

@@ -35,7 +35,7 @@ impl Application {
             Arc::new(RwLock::new(guilds))
         };
         let bump_cache = {
-            let bumps: Vec<(UserId, Duration)> = vec![];
+            let bumps: HashMap<GuildId, Vec<(UserId, Duration)>> = HashMap::new();
             Arc::new(RwLock::new(bumps))
         };
         let shared_keyword_state = {
