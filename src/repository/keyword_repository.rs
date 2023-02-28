@@ -5,6 +5,7 @@ use crate::domain::auto_respond;
 use anyhow::Result;
 use sqlx::Error as SqlxError;
 
+#[derive(Debug)]
 pub struct KeywordRepository {
     pub conn: Database,
 }

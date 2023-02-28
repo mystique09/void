@@ -30,7 +30,7 @@ pub trait UserRepository {
     async fn delete_user(&self, id: i64) -> Result<bool>;
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 pub trait UserUsecase {
     async fn create_user(&self, data: CreateUserDTO) -> Result<User, SqlxError>;
     async fn get_users(&self) -> Result<Vec<User>, SqlxError>;

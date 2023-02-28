@@ -4,6 +4,7 @@ use crate::domain::auto_respond::{self, KeywordRepository};
 use anyhow::Result;
 use sqlx::Error as SqlxError;
 
+#[derive(Debug)]
 pub struct KeywordUsecase {
     pub repository: crate::repository::keyword_repository::KeywordRepository,
 }
@@ -14,7 +15,7 @@ impl KeywordUsecase {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl auto_respond::KeywordUsecase for KeywordUsecase {
     async fn create_keyword(
         &self,
