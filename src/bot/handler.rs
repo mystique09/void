@@ -120,6 +120,7 @@ impl EventHandler for BotHandler {
         let keywords = keywords_cache.get(&message.guild_id.unwrap()).unwrap();
 
         for kw in keywords.iter() {
+            // TODO!: match the response type and mode to be sent
             if message.content.contains(&kw.word) {
                 message
                     .channel_id
