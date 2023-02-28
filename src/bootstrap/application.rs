@@ -39,7 +39,8 @@ impl Application {
             Arc::new(RwLock::new(bumps))
         };
         let shared_keyword_state = {
-            let keywords: Vec<crate::domain::auto_respond::Keyword> = vec![];
+            let keywords: HashMap<GuildId, Vec<crate::domain::auto_respond::Keyword>> =
+                HashMap::new();
             Arc::new(RwLock::new(keywords))
         };
         let shared_user_usecase = {
