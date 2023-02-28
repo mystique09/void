@@ -28,8 +28,8 @@ impl auto_respond::KeywordUsecase for KeywordUsecase {
         self.repository.get_keyword(id).await
     }
 
-    async fn get_keywords(&self) -> Result<Vec<auto_respond::Keyword>, SqlxError> {
-        self.repository.get_keywords().await
+    async fn get_keywords(&self, guild_id: i64) -> Result<Vec<auto_respond::Keyword>, SqlxError> {
+        self.repository.get_keywords(guild_id).await
     }
 
     async fn update_response(&self, id: i64, new_response: &str) -> Result<bool> {
