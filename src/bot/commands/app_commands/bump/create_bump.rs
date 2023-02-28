@@ -9,7 +9,7 @@ use serenity::{
         interaction::application_command::{
             ApplicationCommandInteraction, CommandDataOption, CommandDataOptionValue,
         },
-        ChannelId, UserId,
+        ChannelId, GuildId, UserId,
     },
     prelude::{Context, Mentionable},
     utils::MessageBuilder,
@@ -29,6 +29,7 @@ pub async fn run(
         .resolved
         .as_ref()
         .expect("who to bump?");
+    let guild_id = command.guild_id.unwrap();
 
     let data = ctx
         .data
@@ -52,11 +53,20 @@ pub async fn run(
 
         if let CommandDataOptionValue::String(schedule) = bump_schedule {
             let mut bumps_cache = data.write().await;
+            let bumps = match bumps_cache.get_mut(&guild_id) {
+                Some(map) => map,
+                None => {
+                    let bumps: Vec<(UserId, Duration)> = vec![];
+                    bumps_cache.insert(guild_id, bumps);
+                    let bumps = bumps_cache.get_mut(&guild_id).unwrap();
+                    bumps
+                }
+            };
 
-            if bumps_cache.iter().filter(|b| b.0 == user.id).count() > 0 {
+            if bumps.iter().filter(|b| b.0 == user.id).count() > 0 {
                 return MessageBuilder::new()
                     .user(command.user.id)
-                    .push("someone already bumped that user")
+                    .push(" bump already scheduled, you can cancel it via `/bump_cancel` command")
                     .build();
             }
 
@@ -85,8 +95,11 @@ pub async fn run(
                 _ => "out of scope",
             };
 
-            bumps_cache.push((user.id, dur));
-            info!("Total running bumps: {}", bumps_cache.len());
+            bumps.push((user.id, dur));
+            info!(
+                "new bump created, all running bumps for guild [{}] {:#?}",
+                &guild_id, &bumps
+            );
             let response = generate_random_bump().await;
             let bump_response = response.to_string().replace("{}", dur_name);
 
@@ -95,6 +108,7 @@ pub async fn run(
                 Arc::clone(&ctxcpy),
                 &bump_response,
                 command.channel_id,
+                guild_id,
                 user.id,
                 dur,
             )
@@ -113,6 +127,7 @@ async fn schedule_bump(
     ctx: Arc<Context>,
     response: &str,
     channel_id: ChannelId,
+    guild_id: GuildId,
     user_id: UserId,
     dur: Duration,
 ) {
@@ -129,6 +144,7 @@ async fn schedule_bump(
     tokio::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_secs(dur.num_seconds() as u64)).await;
         let mut bumps_cache = data.write().await;
+        let bumps = bumps_cache.get_mut(&guild_id).unwrap();
 
         /*
         To cancel a bump, we need to know whether a bump for the user
@@ -138,7 +154,7 @@ async fn schedule_bump(
         */
         let mut i: isize = -1;
 
-        for bump in bumps_cache.iter() {
+        for bump in bumps.iter() {
             if bump.0 == user_id {
                 i += 1;
                 break;
@@ -152,9 +168,15 @@ async fn schedule_bump(
         }
 
         // else remove the bump in cache and bump the user
-        bumps_cache.remove(i as usize);
+        bumps.remove(i as usize);
         let response = generate_random_response().await;
-        info!("{} {member}", &response, member = &user_id.mention());
+        info!(
+            "{} {member}, all running bumps for guild [{}]: {:#?}",
+            &response,
+            &guild_id,
+            &bumps,
+            member = &user_id.mention(),
+        );
 
         let message = channel_id
             .send_message(&ctx.http, |message| {
