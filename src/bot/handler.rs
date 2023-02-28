@@ -1,5 +1,7 @@
-use crate::bot::commands::app_commands::register_global_commands;
-use crate::domain::auto_respond::KeywordUsecase;
+use crate::domain::auto_respond::{KeywordUsecase, ResponseMode};
+use crate::{
+    bot::commands::app_commands::register_global_commands, domain::auto_respond::ResponseType,
+};
 use chrono::Utc;
 use serenity::{
     async_trait,
@@ -122,11 +124,70 @@ impl EventHandler for BotHandler {
         for kw in keywords.iter() {
             // TODO!: match the response type and mode to be sent
             if message.content.contains(&kw.word) {
+                match kw.response_type {
+                    ResponseType::SingleLine => {
+                        match kw.response_mode {
+                            ResponseMode::Regular => {
+                                message
+                                    .channel_id
+                                    .send_message(&ctx.http, |m| m.content(&kw.response))
+                                    .await
+                                    .unwrap();
+                            }
+                            ResponseMode::DirectMessage => {
+                                message
+                                    .author
+                                    .direct_message(&ctx.http, |m| m.content(&kw.response))
+                                    .await
+                                    .unwrap();
+                            }
+                        };
+                    }
+                    ResponseType::MultiLine => {
+                        // TODO!: needs to find a way to differentiate the response
+                        match kw.response_mode {
+                            ResponseMode::Regular => {
+                                message
+                                    .channel_id
+                                    .send_message(&ctx.http, |m| m.content(&kw.response))
+                                    .await
+                                    .unwrap();
+                            }
+                            ResponseMode::DirectMessage => {
+                                message
+                                    .author
+                                    .direct_message(&ctx.http, |m| m.content(&kw.response))
+                                    .await
+                                    .unwrap();
+                            }
+                        };
+                    }
+                    ResponseType::Media => {
+                        match kw.response_mode {
+                            ResponseMode::Regular => {
+                                message
+                                    .channel_id
+                                    .send_message(&ctx.http, |m| m.content(&kw.response))
+                                    .await
+                                    .unwrap();
+                            }
+                            ResponseMode::DirectMessage => {
+                                message
+                                    .author
+                                    .direct_message(&ctx.http, |m| m.content(&kw.response))
+                                    .await
+                                    .unwrap();
+                            }
+                        };
+                    }
+                };
+                /*
                 message
                     .channel_id
                     .send_message(&ctx.http, |m| m.content(&kw.response))
                     .await
                     .unwrap();
+                */
                 break;
             }
         }
