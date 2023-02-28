@@ -82,7 +82,7 @@ impl fmt::Display for ResponseMode {
 
 #[derive(Debug)]
 pub struct Keyword {
-    pub id: i64,
+    pub id: uuid::Uuid,
     pub word: String,
     pub guild_id: i64,
     pub response: String,
@@ -108,7 +108,7 @@ impl From<CreateKeywordDTO> for Keyword {
 }
 
 pub struct CreateKeywordDTO {
-    pub id: i64,
+    pub id: uuid::Uuid,
     pub word: String,
     pub guild_id: i64,
     pub response: String,
@@ -126,21 +126,37 @@ pub struct UpdateKeywordDTO {
 #[async_trait]
 pub trait KeywordRepository {
     async fn create_keyword(&self, data: CreateKeywordDTO) -> Result<Keyword, SqlxError>;
-    async fn get_keyword(&self, id: i64) -> Result<Keyword, SqlxError>;
+    async fn get_keyword(&self, id: uuid::Uuid) -> Result<Keyword, SqlxError>;
     async fn get_keywords(&self, guild_id: i64) -> Result<Vec<Keyword>, SqlxError>;
-    async fn update_response(&self, id: i64, new_response: &str) -> Result<bool>;
-    async fn update_response_type(&self, id: i64, new_response_type: ResponseType) -> Result<bool>;
-    async fn update_response_mode(&self, id: i64, new_response_mode: ResponseMode) -> Result<bool>;
-    async fn delete_keyword(&self, id: i64) -> Result<bool>;
+    async fn update_response(&self, id: uuid::Uuid, new_response: &str) -> Result<bool>;
+    async fn update_response_type(
+        &self,
+        id: uuid::Uuid,
+        new_response_type: ResponseType,
+    ) -> Result<bool>;
+    async fn update_response_mode(
+        &self,
+        id: uuid::Uuid,
+        new_response_mode: ResponseMode,
+    ) -> Result<bool>;
+    async fn delete_keyword(&self, id: uuid::Uuid) -> Result<bool>;
 }
 
 #[async_trait]
 pub trait KeywordUsecase {
     async fn create_keyword(&self, data: CreateKeywordDTO) -> Result<Keyword, SqlxError>;
-    async fn get_keyword(&self, id: i64) -> Result<Keyword, SqlxError>;
+    async fn get_keyword(&self, id: uuid::Uuid) -> Result<Keyword, SqlxError>;
     async fn get_keywords(&self, guild_id: i64) -> Result<Vec<Keyword>, SqlxError>;
-    async fn update_response(&self, id: i64, new_response: &str) -> Result<bool>;
-    async fn update_response_type(&self, id: i64, new_response_type: ResponseType) -> Result<bool>;
-    async fn update_response_mode(&self, id: i64, new_response_mode: ResponseMode) -> Result<bool>;
-    async fn delete_keyword(&self, id: i64) -> Result<bool>;
+    async fn update_response(&self, id: uuid::Uuid, new_response: &str) -> Result<bool>;
+    async fn update_response_type(
+        &self,
+        id: uuid::Uuid,
+        new_response_type: ResponseType,
+    ) -> Result<bool>;
+    async fn update_response_mode(
+        &self,
+        id: uuid::Uuid,
+        new_response_mode: ResponseMode,
+    ) -> Result<bool>;
+    async fn delete_keyword(&self, id: uuid::Uuid) -> Result<bool>;
 }

@@ -43,7 +43,7 @@ impl auto_respond::KeywordRepository for KeywordRepository {
         query
     }
 
-    async fn get_keyword(&self, id: i64) -> Result<auto_respond::Keyword, SqlxError> {
+    async fn get_keyword(&self, id: uuid::Uuid) -> Result<auto_respond::Keyword, SqlxError> {
         let query = sqlx::query_as!(
             auto_respond::Keyword,
             r#"
@@ -75,7 +75,7 @@ impl auto_respond::KeywordRepository for KeywordRepository {
         query
     }
 
-    async fn update_response(&self, id: i64, new_response: &str) -> Result<bool> {
+    async fn update_response(&self, id: uuid::Uuid, new_response: &str) -> Result<bool> {
         let query = sqlx::query!(
             r#"
             UPDATE "keywords"
@@ -94,7 +94,7 @@ impl auto_respond::KeywordRepository for KeywordRepository {
 
     async fn update_response_type(
         &self,
-        id: i64,
+        id: uuid::Uuid,
         new_response_type: auto_respond::ResponseType,
     ) -> Result<bool> {
         let query = sqlx::query!(
@@ -115,7 +115,7 @@ impl auto_respond::KeywordRepository for KeywordRepository {
 
     async fn update_response_mode(
         &self,
-        id: i64,
+        id: uuid::Uuid,
         new_response_mode: auto_respond::ResponseMode,
     ) -> Result<bool> {
         let query = sqlx::query!(
@@ -134,7 +134,7 @@ impl auto_respond::KeywordRepository for KeywordRepository {
         Ok(query > 0)
     }
 
-    async fn delete_keyword(&self, id: i64) -> Result<bool> {
+    async fn delete_keyword(&self, id: uuid::Uuid) -> Result<bool> {
         let query = sqlx::query!(
             r#"
             DELETE FROM "keywords"

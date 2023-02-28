@@ -24,7 +24,7 @@ impl auto_respond::KeywordUsecase for KeywordUsecase {
         self.repository.create_keyword(data).await
     }
 
-    async fn get_keyword(&self, id: i64) -> Result<auto_respond::Keyword, SqlxError> {
+    async fn get_keyword(&self, id: uuid::Uuid) -> Result<auto_respond::Keyword, SqlxError> {
         self.repository.get_keyword(id).await
     }
 
@@ -32,13 +32,13 @@ impl auto_respond::KeywordUsecase for KeywordUsecase {
         self.repository.get_keywords(guild_id).await
     }
 
-    async fn update_response(&self, id: i64, new_response: &str) -> Result<bool> {
+    async fn update_response(&self, id: uuid::Uuid, new_response: &str) -> Result<bool> {
         self.repository.update_response(id, new_response).await
     }
 
     async fn update_response_type(
         &self,
-        id: i64,
+        id: uuid::Uuid,
         new_response_type: auto_respond::ResponseType,
     ) -> Result<bool> {
         self.repository
@@ -48,7 +48,7 @@ impl auto_respond::KeywordUsecase for KeywordUsecase {
 
     async fn update_response_mode(
         &self,
-        id: i64,
+        id: uuid::Uuid,
         new_response_mode: auto_respond::ResponseMode,
     ) -> Result<bool> {
         self.repository
@@ -56,7 +56,7 @@ impl auto_respond::KeywordUsecase for KeywordUsecase {
             .await
     }
 
-    async fn delete_keyword(&self, id: i64) -> Result<bool> {
+    async fn delete_keyword(&self, id: uuid::Uuid) -> Result<bool> {
         self.repository.delete_keyword(id).await
     }
 }

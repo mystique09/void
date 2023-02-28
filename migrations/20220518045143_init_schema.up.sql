@@ -37,7 +37,7 @@ CREATE TABLE "roles" (
 );
 
 CREATE TABLE "keywords" (
-  "id" bigint UNIQUE PRIMARY KEY NOT NULL,
+  "id" uuid UNIQUE PRIMARY KEY NOT NULL,
   "word" varchar NOT NULL,
   "guild_id" bigint NOT NULL,
   "response" varchar NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE "keywords" (
 );
 
 CREATE TABLE "rss_feeds" (
-  "id" bigint UNIQUE PRIMARY KEY NOT NULL,
+  "id" uuid UNIQUE PRIMARY KEY NOT NULL,
   "feed_link" varchar NOT NULL,
   "guild_id" bigint NOT NULL,
   "channel_id" bigint NOT NULL,
