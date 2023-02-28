@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use chrono::Duration;
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
@@ -7,6 +8,7 @@ use serenity::{
         interaction::application_command::{
             ApplicationCommandInteraction, CommandDataOption, CommandDataOptionValue,
         },
+        UserId,
     },
     prelude::Context,
     utils::MessageBuilder,
@@ -17,7 +19,7 @@ use crate::bot::shared::SharedBumpState;
 
 pub async fn run(
     ctx: Arc<Context>,
-    _command: &ApplicationCommandInteraction,
+    command: &ApplicationCommandInteraction,
     options: &[CommandDataOption],
 ) -> String {
     let user = options
@@ -26,6 +28,7 @@ pub async fn run(
         .resolved
         .as_ref()
         .expect("no user found");
+    let guild_id = command.guild_id.unwrap();
 
     let data = ctx
         .data
@@ -37,7 +40,19 @@ pub async fn run(
 
     if let CommandDataOptionValue::User(user, _pmember) = user {
         let mut bumps_cache = data.write().await;
+        let bumps = match bumps_cache.get_mut(&guild_id) {
+            Some(map) => map,
+            None => {
+                let bumps: Vec<(UserId, Duration)> = vec![];
+                bumps_cache.insert(guild_id, bumps);
+                let bumps = bumps_cache.get_mut(&guild_id).unwrap();
+                bumps
+            }
+        };
 
+        if user.id != command.user.id {
+            return "you cannot cancel others bump, that will annoy them".to_string();
+        }
         /*
         To cancel a bump, we need to know whether a bump for the user
         already exist, thus we iterate each bump. If no bump exist then
@@ -51,7 +66,7 @@ pub async fn run(
         */
         let mut i: isize = -1;
 
-        for bump in bumps_cache.iter() {
+        for bump in bumps.iter() {
             if bump.0 == user.id {
                 i += 1;
                 break;
@@ -65,15 +80,18 @@ pub async fn run(
                 &user.name, &user.id
             );
             MessageBuilder::new()
+                .push("no bump scheduled for ")
                 .user(user.id)
-                .push(" no bump scheduled for this user")
                 .build()
         } else {
-            bumps_cache.remove(i as usize);
-            info!("bump for {} has been canceled", &user.id);
+            bumps.remove(i as usize);
+            info!(
+                "bump for {} has been canceled, all running bumps: {:#?}",
+                &user.id, &bumps
+            );
             MessageBuilder::new()
+                .push("bump canceled for user ")
                 .user(user.id)
-                .push(" bump canceled for this user")
                 .build()
         }
     } else {
