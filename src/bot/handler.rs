@@ -1,4 +1,5 @@
 use crate::bot::commands::app_commands::register_global_commands;
+use crate::domain::auto_respond::KeywordUsecase;
 use chrono::Utc;
 use serenity::{
     async_trait,
@@ -39,8 +40,29 @@ impl EventHandler for BotHandler {
         register_global_commands(&ctx).await;
 
         /*
-        TODO!: fetch all keywords from db and save in shared cache
+        fetch all keywords from db and save in shared cache
         */
+        let data = ctx.data.read().await;
+        let usecase = data
+            .get::<super::shared::SharedKeywordUsecase>()
+            .unwrap()
+            .clone();
+
+        let auto_respond_usecase_lock = usecase.write().await;
+        let keywords = auto_respond_usecase_lock
+            .get_keywords()
+            .await
+            .unwrap_or(vec![]);
+        info!("{:#?}", keywords);
+
+        let keyword_state = data
+            .get::<super::shared::SharedKeywordsState>()
+            .unwrap()
+            .clone();
+        let mut keyword_state_lock = keyword_state.write().await;
+
+        *keyword_state_lock = keywords;
+        info!("{:#?}", keyword_state_lock);
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
@@ -66,16 +88,36 @@ impl EventHandler for BotHandler {
         }
     }
 
-    async fn message(&self, _ctx: Context, message: Message) {
+    async fn message(&self, ctx: Context, message: Message) {
         if message.author.bot {
             return;
         };
 
-        /* TODO!: implement auto respond feature
+        /*
+        implement auto respond feature
         In ready event all the keywords must be fetch and saved in shared cache
         to avoid many calls in the db, only fetch again the db when new
         keyword is added/updated/deleted.
         */
+        let data = ctx
+            .data
+            .read()
+            .await
+            .get::<super::shared::SharedKeywordsState>()
+            .unwrap()
+            .clone();
+
+        let keywords = data.read().await;
+
+        for kw in keywords.iter() {
+            if message.content.contains(&kw.word) {
+                message
+                    .channel_id
+                    .send_message(&ctx.http, |m| m.content(&kw.response))
+                    .await
+                    .unwrap();
+            }
+        }
     }
 
     async fn cache_ready(&self, ctx: Context, guilds: Vec<GuildId>) {
