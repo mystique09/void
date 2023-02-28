@@ -46,6 +46,10 @@ pub async fn run(
             .as_ref()
             .expect("when to bump?");
 
+        if user.id != command.user.id {
+            return "you cannot do that, that will annoy them".to_string();
+        }
+
         if let CommandDataOptionValue::String(schedule) = bump_schedule {
             let mut bumps_cache = data.write().await;
 
