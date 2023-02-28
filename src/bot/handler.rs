@@ -127,6 +127,7 @@ impl EventHandler for BotHandler {
                     .send_message(&ctx.http, |m| m.content(&kw.response))
                     .await
                     .unwrap();
+                break;
             }
         }
     }
