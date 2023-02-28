@@ -47,21 +47,30 @@ impl EventHandler for BotHandler {
             .get::<super::shared::SharedKeywordUsecase>()
             .unwrap()
             .clone();
+        let guilds = ctx.cache.guilds();
 
         let auto_respond_usecase_lock = usecase.write().await;
-        let keywords = auto_respond_usecase_lock
-            .get_keywords()
-            .await
-            .unwrap_or(vec![]);
-        info!("{:#?}", keywords);
-
         let keyword_state = data
             .get::<super::shared::SharedKeywordsState>()
             .unwrap()
             .clone();
         let mut keyword_state_lock = keyword_state.write().await;
 
-        *keyword_state_lock = keywords;
+        for guild_id in guilds.iter() {
+            let keywords = auto_respond_usecase_lock
+                .get_keywords(guild_id.0 as i64)
+                .await
+                .unwrap_or(vec![]);
+
+            match keyword_state_lock.insert(*guild_id, keywords) {
+                Some(d) => info!(
+                    "keywords {:#?} for thks guild {} already exist, and is updated",
+                    d, guild_id,
+                ),
+                None => info!("new guild, keywords is added for guild {}", &guild_id),
+            };
+        }
+
         info!("{:#?}", keyword_state_lock);
     }
 
@@ -107,7 +116,8 @@ impl EventHandler for BotHandler {
             .unwrap()
             .clone();
 
-        let keywords = data.read().await;
+        let keywords_cache = data.read().await;
+        let keywords = keywords_cache.get(&message.guild_id.unwrap()).unwrap();
 
         for kw in keywords.iter() {
             if message.content.contains(&kw.word) {
