@@ -44,3 +44,9 @@ pub struct SharedBumpState;
 impl TypeMapKey for SharedBumpState {
     type Value = Arc<RwLock<Vec<(UserId, Duration)>>>;
 }
+
+pub struct SharedKeywordsState;
+
+impl TypeMapKey for SharedKeywordsState {
+    type Value = Arc<RwLock<Vec<crate::domain::auto_respond::Keyword>>>;
+}
