@@ -25,13 +25,14 @@ impl auto_respond::KeywordRepository for KeywordRepository {
         let query = sqlx::query_as!(auto_respond::Keyword,
             r#"
         INSERT INTO "keywords" (
-            id, word, response, response_type, response_mode   
+            id, word, guild_id, response, response_type, response_mode   
         ) VALUES (
-            $1, $2, $3, $4, $5
-        ) RETURNING id, word, response, response_type as "response_type: _", response_mode as "response_mode: _", created_at, updated_at;
+            $1, $2, $3, $4, $5, $6
+        ) RETURNING id, word, guild_id, response, response_type as "response_type: _", response_mode as "response_mode: _", created_at, updated_at;
         "#,
             data.id,
             data.word,
+            data.guild_id,
             data.response,
             data.response_type as _,
             data.response_mode as _
@@ -46,7 +47,7 @@ impl auto_respond::KeywordRepository for KeywordRepository {
         let query = sqlx::query_as!(
             auto_respond::Keyword,
             r#"
-        SELECT id, word, response, response_type as "response_type: _", response_mode as "response_mode: _", created_at, updated_at
+        SELECT id, word, guild_id, response, response_type as "response_type: _", response_mode as "response_mode: _", created_at, updated_at
         FROM "keywords"
         WHERE id = $1;
             "#,
@@ -58,13 +59,15 @@ impl auto_respond::KeywordRepository for KeywordRepository {
         query
     }
 
-    async fn get_keywords(&self) -> Result<Vec<auto_respond::Keyword>, SqlxError> {
+    async fn get_keywords(&self, guild_id: i64) -> Result<Vec<auto_respond::Keyword>, SqlxError> {
         let query = sqlx::query_as!(
             auto_respond::Keyword,
             r#"
-        SELECT id, word, response, response_type as "response_type: _", response_mode as "response_mode: _", created_at, updated_at
-        FROM "keywords";
-            "#
+        SELECT id, word, guild_id, response, response_type as "response_type: _", response_mode as "response_mode: _", created_at, updated_at
+        FROM "keywords"
+        WHERE guild_id = $1;
+            "#,
+            guild_id
         )
         .fetch_all(&self.conn.pool)
         .await;
