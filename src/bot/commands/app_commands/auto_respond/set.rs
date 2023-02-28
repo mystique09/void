@@ -4,6 +4,7 @@ use crate::domain::auto_respond::KeywordUsecase;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOptionValue;
+use serenity::model::Permissions;
 use serenity::{
     model::prelude::interaction::application_command::{
         ApplicationCommandInteraction, CommandDataOption,
@@ -19,7 +20,6 @@ pub async fn run(
     command: &ApplicationCommandInteraction,
     options: &[CommandDataOption],
 ) -> String {
-    //todo!("implement set method");
     let new_keyword = {
         let keyword = {
             let kw = options
@@ -82,7 +82,7 @@ pub async fn run(
         };
 
         crate::domain::auto_respond::CreateKeywordDTO {
-            id: 1,
+            id: uuid::Uuid::new_v4(),
             word: keyword.into(),
             guild_id: command.guild_id.unwrap().0 as i64,
             response: response.into(),
@@ -122,6 +122,7 @@ pub fn register(commands: &mut CreateApplicationCommand) -> &mut CreateApplicati
     commands
         .name("auto_respond")
         .description("create a new auto respond")
+        .default_member_permissions(Permissions::ADMINISTRATOR)
         .create_option(|option| {
             option
                 .name("keyword")
