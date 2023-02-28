@@ -37,6 +37,10 @@ impl EventHandler for BotHandler {
         info!("{} is now open.", &ready.user.name);
 
         register_global_commands(&ctx).await;
+
+        /*
+        TODO!: fetch all keywords from db and save in shared cache
+        */
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
@@ -66,10 +70,30 @@ impl EventHandler for BotHandler {
         if message.author.bot {
             return;
         };
+
+        /* TODO!: implement auto respond feature
+        In ready event all the keywords must be fetch and saved in shared cache
+        to avoid many calls in the db, only fetch again the db when new
+        keyword is added/updated/deleted.
+        */
     }
 
     async fn cache_ready(&self, ctx: Context, guilds: Vec<GuildId>) {
         info!("Cache built successfuly.");
+
+        /*
+        We register the slash commands for each guild here instead of the ready event,
+        since the guild cache is not yet ready when the bot is ready(well, obviously).
+
+        I don't have any use for this so let's comment it.
+
+        POTENTIAL-USE: custom commands for a guild(?)
+        */
+        /*
+        for guild_id in guilds.iter() {
+            register_local_commands(&ctx, guild_id).await;
+        }
+        */
 
         let ctx = Arc::new(ctx);
 
@@ -96,6 +120,9 @@ impl EventHandler for BotHandler {
 
         let ctxcpy3 = Arc::clone(&ctx);
 
+        /*
+        Set the guilds in cache for use later.
+        */
         tokio::spawn(async move {
             let guilds_cache = {
                 let data = ctxcpy3.data.read().await;
@@ -103,14 +130,6 @@ impl EventHandler for BotHandler {
             };
 
             for guild_id in guilds.iter() {
-                /*
-                We register the slash commands for each guild here instead of the ready event,
-                since the guild cache is not yet ready when the bot is ready(well, obviously).
-
-                I don't have any use for this so let's comment it.
-                */
-                // register_local_commands(&ctx, guild_id).await;
-
                 let mut guild_cache_lock = guilds_cache.write().await;
                 let guild = ctxcpy3.cache.guild(guild_id).unwrap();
                 let channels = guild
