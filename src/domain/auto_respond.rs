@@ -5,7 +5,7 @@ use sqlx::Error as SqlxError;
 use std::fmt;
 
 #[derive(sqlx::Type, Debug)]
-#[sqlx(type_name = "ResponseType", rename_all = "lowercase")]
+#[sqlx(type_name = "ResponseType")]
 pub enum ResponseType {
     SingleLine,
     MultiLine,
@@ -45,7 +45,7 @@ impl fmt::Display for ResponseType {
 }
 
 #[derive(sqlx::Type, Debug)]
-#[sqlx(type_name = "ResponseMode", rename_all = "lowercase")]
+#[sqlx(type_name = "ResponseMode")]
 pub enum ResponseMode {
     Regular,
     DirectMessage,
@@ -84,6 +84,7 @@ impl fmt::Display for ResponseMode {
 pub struct Keyword {
     pub id: i64,
     pub word: String,
+    pub guild_id: i64,
     pub response: String,
     pub response_type: ResponseType,
     pub response_mode: ResponseMode,
@@ -96,6 +97,7 @@ impl From<CreateKeywordDTO> for Keyword {
         Self {
             id: data.id,
             word: data.word,
+            guild_id: data.guild_id,
             response: data.response,
             response_type: data.response_type,
             response_mode: data.response_mode,
@@ -108,6 +110,7 @@ impl From<CreateKeywordDTO> for Keyword {
 pub struct CreateKeywordDTO {
     pub id: i64,
     pub word: String,
+    pub guild_id: i64,
     pub response: String,
     pub response_type: ResponseType,
     pub response_mode: ResponseMode,
@@ -124,7 +127,7 @@ pub struct UpdateKeywordDTO {
 pub trait KeywordRepository {
     async fn create_keyword(&self, data: CreateKeywordDTO) -> Result<Keyword, SqlxError>;
     async fn get_keyword(&self, id: i64) -> Result<Keyword, SqlxError>;
-    async fn get_keywords(&self) -> Result<Vec<Keyword>, SqlxError>;
+    async fn get_keywords(&self, guild_id: i64) -> Result<Vec<Keyword>, SqlxError>;
     async fn update_response(&self, id: i64, new_response: &str) -> Result<bool>;
     async fn update_response_type(&self, id: i64, new_response_type: ResponseType) -> Result<bool>;
     async fn update_response_mode(&self, id: i64, new_response_mode: ResponseMode) -> Result<bool>;
@@ -135,7 +138,7 @@ pub trait KeywordRepository {
 pub trait KeywordUsecase {
     async fn create_keyword(&self, data: CreateKeywordDTO) -> Result<Keyword, SqlxError>;
     async fn get_keyword(&self, id: i64) -> Result<Keyword, SqlxError>;
-    async fn get_keywords(&self) -> Result<Vec<Keyword>, SqlxError>;
+    async fn get_keywords(&self, guild_id: i64) -> Result<Vec<Keyword>, SqlxError>;
     async fn update_response(&self, id: i64, new_response: &str) -> Result<bool>;
     async fn update_response_type(&self, id: i64, new_response_type: ResponseType) -> Result<bool>;
     async fn update_response_mode(&self, id: i64, new_response_mode: ResponseMode) -> Result<bool>;
