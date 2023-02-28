@@ -10,6 +10,7 @@ use super::database::Database;
 use super::env::Env;
 use crate::bot::shared::{
     Guild, SharedBumpState, SharedEnvState, SharedGuildState, SharedKeywordUsecase,
+    SharedKeywordsState,
 };
 use crate::{
     bot::{init::Bot, shared::SharedUserUsecase},
@@ -37,6 +38,10 @@ impl Application {
             let bumps: Vec<(UserId, Duration)> = vec![];
             Arc::new(RwLock::new(bumps))
         };
+        let shared_keyword_state = {
+            let keywords: Vec<crate::domain::auto_respond::Keyword> = vec![];
+            Arc::new(RwLock::new(keywords))
+        };
         let shared_user_usecase = {
             let user_repo = repository::user_repository::UserRepository::new(db.clone());
             let user_case = usecase::user_usecase::UserUsecase::new(user_repo);
@@ -50,6 +55,8 @@ impl Application {
 
         bot.write_data::<SharedEnvState>(shared_env).await;
         bot.write_data::<SharedGuildState>(guild_cache).await;
+        bot.write_data::<SharedKeywordsState>(shared_keyword_state)
+            .await;
         bot.write_data::<SharedBumpState>(bump_cache).await;
         bot.write_data::<SharedUserUsecase>(shared_user_usecase)
             .await;
