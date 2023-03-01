@@ -91,23 +91,37 @@ pub async fn run(
         }
     };
 
+    let guild_id = command.guild_id.unwrap();
     let data = ctx.data.read().await;
-    let keyword_usecase_lock = {
+
+    let shared_keyword_usecase = {
         let kw_lock = data.get::<SharedKeywordUsecase>().unwrap().clone();
         kw_lock
     };
-    let keyword_usecase = keyword_usecase_lock.read().await;
-    let keyword_state_lock = {
+    let keyword_usecase = shared_keyword_usecase.read().await;
+
+    let shared_keyword_state = {
         let kw_state_lock = data.get::<SharedKeywordsState>().unwrap().clone();
         kw_state_lock
     };
-    let mut keyword_state = keyword_state_lock.write().await;
+    let mut keyword_state = shared_keyword_state.write().await;
 
     match keyword_usecase.create_keyword(new_keyword).await {
         Ok(v) => {
-            info!("new keyword created {}", &v.word);
-            let guild = keyword_state.get_mut(&command.guild_id.unwrap()).unwrap();
-            guild.push(v);
+            match keyword_state.get_mut(&guild_id) {
+                Some(kws) => {
+                    kws.push(v);
+                    info!("new keyword added: {:#?}", kws);
+                }
+                None => {
+                    let keywords: Vec<crate::domain::auto_respond::Keyword> = vec![v];
+                    info!(
+                        "shared state is empty, attempt to create new: {:#?}",
+                        &keywords
+                    );
+                    keyword_state.insert(guild_id, keywords);
+                }
+            };
 
             "new keyword added".to_string()
         }
