@@ -1,5 +1,88 @@
 {
   "db": "PostgreSQL",
+  "1adffcdbfb8e27363afd85697c97db8d7350203c9d8f1c9d9ae28706636ab4d2": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "word",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "guild_id",
+          "ordinal": 2,
+          "type_info": "Int8"
+        },
+        {
+          "name": "response",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "response_type: _",
+          "ordinal": 4,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "SingleLine",
+                  "MultiLine",
+                  "Media"
+                ]
+              },
+              "name": "ResponseType"
+            }
+          }
+        },
+        {
+          "name": "response_mode: _",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Regular",
+                  "DirectMessage"
+                ]
+              },
+              "name": "ResponseMode"
+            }
+          }
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Date"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Date"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n        SELECT id, word, guild_id, response, response_type as \"response_type: _\", response_mode as \"response_mode: _\", created_at, updated_at\n        FROM \"keywords\"\n        WHERE id = $1;\n            "
+  },
   "6df049e310c0e3f166229a257bcd1317bc8d273ce7d02b3e84ba312fe26608e0": {
     "describe": {
       "columns": [
@@ -38,6 +121,53 @@
     },
     "query": "\n            SELECT * FROM \"users\"\n            WHERE id = $1\n            "
   },
+  "8c94f45b91315c81f047a95487ea24c01cf51c9f086a23983cc0df01270a273c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "SingleLine",
+                  "MultiLine",
+                  "Media"
+                ]
+              },
+              "name": "ResponseType"
+            }
+          }
+        ]
+      }
+    },
+    "query": "\n            UPDATE \"keywords\"\n            SET response_type = $2\n            WHERE id = $1;\n            "
+  },
+  "91c09bfd1ff4ea37a4a6ac8fd4514da1c270b8b524dd70142945e3ab1d127b97": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Regular",
+                  "DirectMessage"
+                ]
+              },
+              "name": "ResponseMode"
+            }
+          }
+        ]
+      }
+    },
+    "query": "\n            UPDATE \"keywords\"\n            SET response_mode = $2\n            WHERE id = $1;\n            "
+  },
   "92cd553ef6c3ba72a3edfb43064ed818a57075732055411951e7ec2030128c8f": {
     "describe": {
       "columns": [],
@@ -49,6 +179,18 @@
       }
     },
     "query": "\n                DELETE FROM \"users\"\n                WHERE id = $1\n                "
+  },
+  "9b9c5eba8ee8335043ea4ecccfee5d99855830e28f91f7724f84b84b2f814f29": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM \"keywords\"\n            WHERE id = $1;\n            "
   },
   "9fd32c6289a7355001f5d75d4c89247d09573d43832a8541e6f6a5f89df4f1a6": {
     "describe": {
@@ -88,6 +230,211 @@
       }
     },
     "query": "\n        INSERT INTO \"users\" (\n            id, nickname\n        ) VALUES (\n            $1, $2\n        )\n        RETURNING *\n        "
+  },
+  "a3a7d40ec6d8a24ed83fb837c90bbaee380509775d3cf694ca78862cfef113dd": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "word",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "guild_id",
+          "ordinal": 2,
+          "type_info": "Int8"
+        },
+        {
+          "name": "response",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "response_type: _",
+          "ordinal": 4,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "SingleLine",
+                  "MultiLine",
+                  "Media"
+                ]
+              },
+              "name": "ResponseType"
+            }
+          }
+        },
+        {
+          "name": "response_mode: _",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Regular",
+                  "DirectMessage"
+                ]
+              },
+              "name": "ResponseMode"
+            }
+          }
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Date"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Date"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Int8",
+          "Varchar",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "SingleLine",
+                  "MultiLine",
+                  "Media"
+                ]
+              },
+              "name": "ResponseType"
+            }
+          },
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Regular",
+                  "DirectMessage"
+                ]
+              },
+              "name": "ResponseMode"
+            }
+          }
+        ]
+      }
+    },
+    "query": "\n        INSERT INTO \"keywords\" (\n            id, word, guild_id, response, response_type, response_mode   \n        ) VALUES (\n            $1, $2, $3, $4, $5, $6\n        ) RETURNING id, word, guild_id, response, response_type as \"response_type: _\", response_mode as \"response_mode: _\", created_at, updated_at;\n        "
+  },
+  "bc4edc8fb2c42f07723cb4460153b197381c4c4975900d0cbab573ae374798db": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "word",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "guild_id",
+          "ordinal": 2,
+          "type_info": "Int8"
+        },
+        {
+          "name": "response",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "response_type: _",
+          "ordinal": 4,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "SingleLine",
+                  "MultiLine",
+                  "Media"
+                ]
+              },
+              "name": "ResponseType"
+            }
+          }
+        },
+        {
+          "name": "response_mode: _",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Regular",
+                  "DirectMessage"
+                ]
+              },
+              "name": "ResponseMode"
+            }
+          }
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Date"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Date"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "\n        SELECT id, word, guild_id, response, response_type as \"response_type: _\", response_mode as \"response_mode: _\", created_at, updated_at\n        FROM \"keywords\"\n        WHERE guild_id = $1;\n            "
+  },
+  "e58077d2b13bd54cedf79a4d0976cdd92040da5b5a80457acac9127eaef5fc22": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "\n            UPDATE \"keywords\"\n            SET response = $2\n            WHERE id = $1;\n            "
   },
   "e81464eaebb6c41d8959937f804a8965fbaf8c7c779550563efdd305871e0629": {
     "describe": {
