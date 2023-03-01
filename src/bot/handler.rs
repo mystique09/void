@@ -69,11 +69,11 @@ impl EventHandler for BotHandler {
                     "keywords {:#?} for thks guild {} already exist, and is updated",
                     d, guild_id,
                 ),
-                None => info!("new guild, keywords is added for guild {}", &guild_id),
+                None => info!("new guild detected, keywords is added for guild {}", &guild_id),
             };
         }
 
-        info!("{:#?}", keyword_state_lock);
+        info!("keyword state lock: {:#?}", keyword_state_lock);
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
