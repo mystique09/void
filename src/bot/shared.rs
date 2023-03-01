@@ -6,19 +6,25 @@ use serenity::{
     prelude::{RwLock, TypeMapKey},
 };
 
-// use crate::bootstrap::database::Database;
+use crate::bootstrap::env::Env;
 
-// #[derive(Debug)]
-// pub struct SharedState;
+pub struct SharedEnvState;
 
-// impl TypeMapKey for SharedState {
-//     type Value = Arc<RwLock<Database>>;
-// }
+impl TypeMapKey for SharedEnvState {
+    type Value = Arc<RwLock<Env>>;
+}
 
 pub struct SharedUserUsecase;
 
 impl TypeMapKey for SharedUserUsecase {
     type Value = Arc<RwLock<crate::usecase::user_usecase::UserUsecase>>;
+}
+
+#[derive(Debug)]
+pub struct SharedKeywordUsecase;
+
+impl TypeMapKey for SharedKeywordUsecase {
+    type Value = Arc<RwLock<crate::usecase::keyword_usecase::KeywordUsecase>>;
 }
 
 #[derive(Debug)]
@@ -35,7 +41,13 @@ impl TypeMapKey for SharedGuildState {
 
 #[derive(Debug)]
 pub struct SharedBumpState;
-
+type BumpMap = HashMap<GuildId, Vec<(UserId, Duration)>>;
 impl TypeMapKey for SharedBumpState {
-    type Value = Arc<RwLock<Vec<(UserId, Duration)>>>;
+    type Value = Arc<RwLock<BumpMap>>;
+}
+
+pub struct SharedKeywordsState;
+type KeywordMap = HashMap<GuildId, Vec<crate::domain::auto_respond::Keyword>>;
+impl TypeMapKey for SharedKeywordsState {
+    type Value = Arc<RwLock<KeywordMap>>;
 }

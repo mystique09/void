@@ -1,26 +1,35 @@
 use std::sync::Arc;
 
+use crate::utils::helpers::{generate_random_bump, generate_random_response};
 use chrono::Duration;
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
         command::CommandOptionType,
-        interaction::application_command::{CommandDataOption, CommandDataOptionValue},
-        ChannelId, UserId,
+        interaction::application_command::{
+            ApplicationCommandInteraction, CommandDataOption, CommandDataOptionValue,
+        },
+        ChannelId, GuildId, UserId,
     },
     prelude::{Context, Mentionable},
+    utils::MessageBuilder,
 };
 use tracing::{error, info};
 
 use crate::bot::shared::SharedBumpState;
 
-pub async fn run(ctx: Arc<Context>, options: &[CommandDataOption]) -> String {
+pub async fn run(
+    ctx: Arc<Context>,
+    command: &ApplicationCommandInteraction,
+    options: &[CommandDataOption],
+) -> String {
     let user = options
         .get(0)
         .expect("who to bump?")
         .resolved
         .as_ref()
         .expect("who to bump?");
+    let guild_id = command.guild_id.unwrap();
 
     let data = ctx
         .data
@@ -38,32 +47,74 @@ pub async fn run(ctx: Arc<Context>, options: &[CommandDataOption]) -> String {
             .as_ref()
             .expect("when to bump?");
 
+        if user.id != command.user.id {
+            return "you cannot do that, that will annoy them".to_string();
+        }
+
         if let CommandDataOptionValue::String(schedule) = bump_schedule {
             let mut bumps_cache = data.write().await;
+            let bumps = match bumps_cache.get_mut(&guild_id) {
+                Some(map) => map,
+                None => {
+                    let bumps: Vec<(UserId, Duration)> = vec![];
+                    bumps_cache.insert(guild_id, bumps);
+                    let bumps = bumps_cache.get_mut(&guild_id).unwrap();
+                    bumps
+                }
+            };
 
-            if bumps_cache.iter().filter(|b| b.0 == user.id).count() > 0 {
-                return "some already bumped that user".to_string();
+            if bumps.iter().filter(|b| b.0 == user.id).count() > 0 {
+                return MessageBuilder::new()
+                    .user(command.user.id)
+                    .push(" bump already scheduled, you can cancel it via `/bump_cancel` command")
+                    .build();
             }
 
             let dur = match schedule.as_str() {
                 "10s" => Duration::seconds(10),
-                "1hr" => Duration::hours(1),
-                "2hrs" => Duration::hours(2),
-                "5hrs" => Duration::hours(5),
+                "1h" => Duration::hours(1),
+                "2h" => Duration::hours(2),
+                "5h" => Duration::hours(5),
                 "1d" => Duration::days(1),
                 "1w" => Duration::weeks(1),
                 _ => {
-                    return "invalid time".to_string();
+                    return MessageBuilder::new()
+                        .user(command.user.id)
+                        .push("Invalid choice")
+                        .build();
                 }
             };
 
-            bumps_cache.push((user.id, dur));
-            info!("Total running bumps: {}", bumps_cache.len());
+            let dur_name = match schedule.as_str() {
+                "10s" => "10 seconds",
+                "1h" => "1 hour",
+                "2h" => "2 hours",
+                "5h" => "5 hours",
+                "1d" => "1 day",
+                "1w" => "1 week",
+                _ => "out of scope",
+            };
+
+            bumps.push((user.id, dur));
+            info!(
+                "new bump created, all running bumps for guild [{}] {:#?}",
+                &guild_id, &bumps
+            );
+            let response = generate_random_bump().await;
+            let bump_response = response.to_string().replace("{}", dur_name);
 
             let ctxcpy = Arc::new(ctx);
-            schedule_bump(Arc::clone(&ctxcpy), user.id, dur).await;
+            schedule_bump(
+                Arc::clone(&ctxcpy),
+                &bump_response,
+                command.channel_id,
+                guild_id,
+                user.id,
+                dur,
+            )
+            .await;
 
-            format!("Uhh, ok. Bump {} after {}", &user.name, schedule)
+            bump_response
         } else {
             "I am not a magician, please provided a schedule.".to_string()
         }
@@ -72,7 +123,14 @@ pub async fn run(ctx: Arc<Context>, options: &[CommandDataOption]) -> String {
     }
 }
 
-async fn schedule_bump(ctx: Arc<Context>, user_id: UserId, dur: Duration) {
+async fn schedule_bump(
+    ctx: Arc<Context>,
+    response: &str,
+    channel_id: ChannelId,
+    guild_id: GuildId,
+    user_id: UserId,
+    dur: Duration,
+) {
     let data = ctx
         .data
         .read()
@@ -81,32 +139,52 @@ async fn schedule_bump(ctx: Arc<Context>, user_id: UserId, dur: Duration) {
         .unwrap()
         .clone();
 
-    info!("Uhh, ok. Bump {} after {}", user_id.mention(), dur);
+    info!("{}", response);
 
     tokio::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_secs(dur.num_seconds() as u64)).await;
         let mut bumps_cache = data.write().await;
+        let bumps = bumps_cache.get_mut(&guild_id).unwrap();
 
-        let mut i = 0;
+        /*
+        To cancel a bump, we need to know whether a bump for the user
+        already exist, thus we iterate each bump. If no bump exist then
+        we immediately return the task. I don't know yet if we can cancel a tokio task,
+        I know this is kinda bullshit but hey it works!
+        */
+        let mut i: isize = -1;
 
-        for bump in bumps_cache.iter() {
+        for bump in bumps.iter() {
             if bump.0 == user_id {
+                i += 1;
                 break;
             }
             i += 1;
         }
 
-        bumps_cache.remove(i);
+        // if bump is deleted then we immediately return the async task
+        if i == -1 {
+            return;
+        }
 
-        let message = ChannelId(920359624752893952)
-            .send_message(&ctx, |m| {
-                m.embed(|e| {
-                    e.title("Times up!").field(
-                        "Done",
-                        format!("Bump {}, welcome back to reality!", user_id.mention()),
-                        false,
-                    )
-                })
+        // else remove the bump in cache and bump the user
+        bumps.remove(i as usize);
+        let response = generate_random_response().await;
+        info!(
+            "{} {member}, all running bumps for guild [{}]: {:#?}",
+            &response,
+            &guild_id,
+            &bumps,
+            member = &user_id.mention(),
+        );
+
+        let message = channel_id
+            .send_message(&ctx.http, |message| {
+                message.content(format!(
+                    "{} {member}.",
+                    response,
+                    member = user_id.mention()
+                ))
             })
             .await;
 
@@ -132,6 +210,12 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .name("time")
                 .description("when to bump")
                 .kind(CommandOptionType::String)
+                .add_string_choice("10 seconds", "10s")
+                .add_string_choice("1 hour", "1h")
+                .add_string_choice("2 hours", "2h")
+                .add_string_choice("5 hours", "5h")
+                .add_string_choice("1 day", "1d")
+                .add_string_choice("1 week", "1w")
                 .required(true)
         })
 }

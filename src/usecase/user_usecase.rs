@@ -14,7 +14,7 @@ impl UserUsecase {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl domain::user::UserUsecase for UserUsecase {
     async fn create_user(
         &self,

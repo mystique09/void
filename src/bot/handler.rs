@@ -1,9 +1,12 @@
+use crate::domain::auto_respond::{KeywordUsecase, ResponseMode};
+use crate::{
+    bot::commands::app_commands::register_global_commands, domain::auto_respond::ResponseType,
+};
 use chrono::Utc;
 use serenity::{
     async_trait,
     model::{
         prelude::{
-            command::Command,
             interaction::{Interaction, InteractionResponseType},
             Activity, ChannelId, GuildId, Message, Ready,
         },
@@ -18,7 +21,7 @@ use std::sync::{
 use std::time::Duration;
 use tracing::{error, info};
 
-use super::shared::SharedGuildState;
+use super::shared::{SharedEnvState, SharedGuildState};
 
 pub struct BotHandler {
     pub is_parallelized: AtomicBool,
@@ -36,30 +39,53 @@ impl EventHandler for BotHandler {
         ctx.set_presence(activity, OnlineStatus::Online).await;
         info!("{} is now open.", &ready.user.name);
 
-        match Command::create_global_application_command(&ctx.http, |command| {
-            super::commands::app_commands::bump::create_bump::register(command)
-        })
-        .await
-        {
-            Ok(command) => error!("Created global app command: {}", command.name),
-            Err(why) => error!("Error creating global command: {}", why),
-        };
+        register_global_commands(&ctx).await;
+
+        /*
+        fetch all keywords from db and save in shared cache
+        */
+        let data = ctx.data.read().await;
+        let usecase = data
+            .get::<super::shared::SharedKeywordUsecase>()
+            .unwrap()
+            .clone();
+        let guilds = ctx.cache.guilds();
+
+        let auto_respond_usecase_lock = usecase.write().await;
+        let keyword_state = data
+            .get::<super::shared::SharedKeywordsState>()
+            .unwrap()
+            .clone();
+        let mut keyword_state_lock = keyword_state.write().await;
+
+        for guild_id in guilds.iter() {
+            let keywords = auto_respond_usecase_lock
+                .get_keywords(guild_id.0 as i64)
+                .await
+                .unwrap_or(vec![]);
+
+            match keyword_state_lock.insert(*guild_id, keywords) {
+                Some(d) => info!(
+                    "keywords {:#?} for thks guild {} already exist, and is updated",
+                    d, guild_id,
+                ),
+                None => info!("new guild detected, keywords is added for guild {}", &guild_id),
+            };
+        }
+
+        info!("keyword state lock: {:#?}", keyword_state_lock);
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
             let ctxcpy = Arc::new(ctx);
 
-            let content = match command.data.name.as_str() {
-                "bump" => {
-                    super::commands::app_commands::bump::create_bump::run(
-                        Arc::clone(&ctxcpy),
-                        &command.data.options,
-                    )
-                    .await
-                }
-                _ => "not implemented".to_string(),
-            };
+            let content = super::commands::app_commands::match_app_command(
+                &ctxcpy,
+                &command,
+                &command.data.options,
+            )
+            .await;
 
             if let Err(why) = command
                 .create_interaction_response(&ctxcpy, |r| {
@@ -78,17 +104,111 @@ impl EventHandler for BotHandler {
             return;
         };
 
-        let _data = ctx
+        /*
+        implement auto respond feature
+        In ready event all the keywords must be fetch and saved in shared cache
+        to avoid many calls in the db, only fetch again the db when new
+        keyword is added/updated/deleted.
+        */
+        let data = ctx
             .data
             .read()
             .await
-            .get::<SharedGuildState>()
+            .get::<super::shared::SharedKeywordsState>()
             .unwrap()
             .clone();
+
+        let keywords_cache = data.read().await;
+        let keywords = keywords_cache.get(&message.guild_id.unwrap()).unwrap();
+
+        for kw in keywords.iter() {
+            // TODO!: match the response type and mode to be sent
+            if message.content.contains(&kw.word) {
+                match kw.response_type {
+                    ResponseType::SingleLine => {
+                        match kw.response_mode {
+                            ResponseMode::Regular => {
+                                message
+                                    .channel_id
+                                    .send_message(&ctx.http, |m| m.content(&kw.response))
+                                    .await
+                                    .unwrap();
+                            }
+                            ResponseMode::DirectMessage => {
+                                message
+                                    .author
+                                    .direct_message(&ctx.http, |m| m.content(&kw.response))
+                                    .await
+                                    .unwrap();
+                            }
+                        };
+                    }
+                    ResponseType::MultiLine => {
+                        // TODO!: needs to find a way to differentiate the response
+                        match kw.response_mode {
+                            ResponseMode::Regular => {
+                                message
+                                    .channel_id
+                                    .send_message(&ctx.http, |m| m.content(&kw.response))
+                                    .await
+                                    .unwrap();
+                            }
+                            ResponseMode::DirectMessage => {
+                                message
+                                    .author
+                                    .direct_message(&ctx.http, |m| m.content(&kw.response))
+                                    .await
+                                    .unwrap();
+                            }
+                        };
+                    }
+                    ResponseType::Media => {
+                        match kw.response_mode {
+                            ResponseMode::Regular => {
+                                message
+                                    .channel_id
+                                    .send_message(&ctx.http, |m| m.content(&kw.response))
+                                    .await
+                                    .unwrap();
+                            }
+                            ResponseMode::DirectMessage => {
+                                message
+                                    .author
+                                    .direct_message(&ctx.http, |m| m.content(&kw.response))
+                                    .await
+                                    .unwrap();
+                            }
+                        };
+                    }
+                };
+                /*
+                message
+                    .channel_id
+                    .send_message(&ctx.http, |m| m.content(&kw.response))
+                    .await
+                    .unwrap();
+                */
+                break;
+            }
+        }
     }
 
     async fn cache_ready(&self, ctx: Context, guilds: Vec<GuildId>) {
         info!("Cache built successfuly.");
+
+        /*
+        We register the slash commands for each guild here instead of the ready event,
+        since the guild cache is not yet ready when the bot is ready(well, obviously).
+
+        I don't have any use for this so let's comment it.
+
+        POTENTIAL-USE: custom commands for a guild(?)
+        */
+        /*
+        for guild_id in guilds.iter() {
+            register_local_commands(&ctx, guild_id).await;
+        }
+        */
 
         let ctx = Arc::new(ctx);
 
@@ -115,6 +235,9 @@ impl EventHandler for BotHandler {
 
         let ctxcpy3 = Arc::clone(&ctx);
 
+        /*
+        Set the guilds in cache for use later.
+        */
         tokio::spawn(async move {
             let guilds_cache = {
                 let data = ctxcpy3.data.read().await;
@@ -137,29 +260,43 @@ impl EventHandler for BotHandler {
 }
 
 async fn log_system_load(ctx: Arc<Context>) {
-    let cpu_load = sys_info::loadavg().unwrap();
-    let mem_use = sys_info::mem_info().unwrap();
+    let data = ctx
+        .data
+        .read()
+        .await
+        .get::<SharedEnvState>()
+        .unwrap()
+        .clone();
 
-    // We can use ChannelId directly to send a message to a specific channel; in this case, the
+    let cpu_load = match sys_info::loadavg() {
+        Ok(cpu) => format!("{:.2}%", cpu.one * 10.0),
+        Err(why) => {
+            error!("{}", why);
+            "not available".to_string()
+        }
+    };
+    let mem_use = match sys_info::mem_info() {
+        Ok(mem) => format!(
+            "{:.2} MB Free out of {:.2}",
+            mem.free as f32 / 1000.0,
+            mem.total as f32 / 1000.0
+        ),
+        Err(why) => {
+            error!("{}", why);
+            "not available".to_string()
+        }
+    };
+    let data_lock = data.write().await;
+    let channel_id = data_lock.get_channel_id();
+
+    // We can use ChannelId from the env variable you set(IMHO, it should be a logs text channel), directly to send a message to a specific channel; in this case, the
     // message would be sent to the #testing channel on the discord server.
-    let message = ChannelId(920359624752893952)
+    let message = ChannelId(*channel_id)
         .send_message(&ctx, |m| {
             m.embed(|e| {
                 e.title("System Resource Load")
-                    .field(
-                        "CPU Load Average",
-                        format!("{:.2}%", cpu_load.one * 10.0),
-                        false,
-                    )
-                    .field(
-                        "Memory Usage",
-                        format!(
-                            "{:.2} MB Free out of {:.2} MB",
-                            mem_use.free as f32 / 1000.0,
-                            mem_use.total as f32 / 1000.0
-                        ),
-                        false,
-                    )
+                    .field("CPU Load Average", cpu_load, false)
+                    .field("Memory Usage", mem_use, false)
             })
         })
         .await;

@@ -1,20 +1,20 @@
 CREATE TYPE "ResponseType" AS ENUM (
-  'SINGLE',
-  'MULTI',
-  'MEDIA'
+  'SingleLine',
+  'MultiLine',
+  'Media'
 );
 
 CREATE TYPE "ResponseMode" AS ENUM (
-  'REGULAR',
-  'DM'
+  'Regular',
+  'DirectMessage'
 );
 
 CREATE TYPE "RefreshInterval" AS ENUM (
-  'HOURLY',
-  'DAILY',
-  'WEEKLY',
-  'MONTHLY',
-  'ANNUAL'
+  'Hourly',
+  'Daily',
+  'Weekly',
+  'Monthly',
+  'Annualy'
 );
 
 CREATE TABLE "users" (
@@ -37,20 +37,22 @@ CREATE TABLE "roles" (
 );
 
 CREATE TABLE "keywords" (
-  "id" bigint UNIQUE PRIMARY KEY NOT NULL,
+  "id" uuid UNIQUE PRIMARY KEY NOT NULL,
   "word" varchar NOT NULL,
+  "guild_id" bigint NOT NULL,
   "response" varchar NOT NULL,
-  "response_type" "ResponseType" NOT NULL DEFAULT 'SINGLE',
-  "response_mode" "ResponseMode" NOT NULL DEFAULT 'REGULAR',
+  "response_type" "ResponseType" NOT NULL DEFAULT 'SingleLine',
+  "response_mode" "ResponseMode" NOT NULL DEFAULT 'Regular',
   "created_at" date DEFAULT (now()),
   "updated_at" date DEFAULT (now())
 );
 
 CREATE TABLE "rss_feeds" (
-  "id" bigint UNIQUE PRIMARY KEY NOT NULL,
+  "id" uuid UNIQUE PRIMARY KEY NOT NULL,
   "feed_link" varchar NOT NULL,
+  "guild_id" bigint NOT NULL,
   "channel_id" bigint NOT NULL,
-  "refresh_interval" "RefreshInterval" DEFAULT 'HOURLY',
+  "refresh_interval" "RefreshInterval" DEFAULT 'Hourly',
   "created_at" date DEFAULT (now()),
   "updated_at" date DEFAULT (now())
 );
