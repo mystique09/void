@@ -69,7 +69,10 @@ impl EventHandler for BotHandler {
                     "keywords {:#?} for thks guild {} already exist, and is updated",
                     d, guild_id,
                 ),
-                None => info!("new guild detected, keywords is added for guild {}", &guild_id),
+                None => info!(
+                    "new guild detected, keywords is added for guild {}",
+                    &guild_id
+                ),
             };
         }
 
@@ -104,12 +107,14 @@ impl EventHandler for BotHandler {
             return;
         };
 
+        let guild_id = message.guild_id.unwrap();
         /*
         implement auto respond feature
         In ready event all the keywords must be fetch and saved in shared cache
         to avoid many calls in the db, only fetch again the db when new
         keyword is added/updated/deleted.
         */
+
         let data = ctx
             .data
             .read()
@@ -118,8 +123,16 @@ impl EventHandler for BotHandler {
             .unwrap()
             .clone();
 
-        let keywords_cache = data.read().await;
-        let keywords = keywords_cache.get(&message.guild_id.unwrap()).unwrap();
+        let mut keywords_cache = data.write().await;
+        let keywords = match keywords_cache.get(&guild_id) {
+            Some(cache) => cache,
+            None => {
+                let keywords: Vec<crate::domain::auto_respond::Keyword> = vec![];
+                keywords_cache.insert(guild_id, keywords);
+                let cache = keywords_cache.get_mut(&guild_id).unwrap();
+                cache
+            }
+        };
 
         for kw in keywords.iter() {
             // TODO!: match the response type and mode to be sent
