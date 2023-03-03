@@ -3,6 +3,7 @@ use anyhow::Result;
 use serenity::async_trait;
 use sqlx::Error as SqlxError;
 
+#[derive(Debug)]
 pub struct UserRepository {
     pub conn: Database,
 }

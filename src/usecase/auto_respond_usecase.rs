@@ -16,7 +16,7 @@ impl KeywordUsecase {
 }
 
 #[async_trait]
-impl auto_respond::KeywordUsecase for KeywordUsecase {
+impl auto_respond::AutoRespondUsecase for KeywordUsecase {
     async fn create_keyword(
         &self,
         data: auto_respond::CreateKeywordDTO,

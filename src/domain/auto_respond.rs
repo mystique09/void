@@ -143,7 +143,7 @@ pub trait KeywordRepository {
 }
 
 #[async_trait]
-pub trait KeywordUsecase {
+pub trait AutoRespondUsecase {
     async fn create_keyword(&self, data: CreateKeywordDTO) -> Result<Keyword, SqlxError>;
     async fn get_keyword(&self, id: uuid::Uuid) -> Result<Keyword, SqlxError>;
     async fn get_keywords(&self, guild_id: i64) -> Result<Vec<Keyword>, SqlxError>;

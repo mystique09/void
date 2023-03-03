@@ -4,6 +4,7 @@ use sqlx::Error as SqlxError;
 
 use crate::domain::{self, user::UserRepository};
 
+#[derive(Debug)]
 pub struct UserUsecase {
     pub repository: crate::repository::user_repository::UserRepository,
 }
