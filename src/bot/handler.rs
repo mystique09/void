@@ -1,4 +1,4 @@
-use crate::bot::commands::app_commands::register_global_commands;
+use crate::bot::commands::app_commands::{register_global_commands, register_local_commands};
 use crate::bot::events::cache::{bind_guilds, log_system, set_bot_status};
 use crate::bot::events::ready::bind_keywords;
 use serenity::{
@@ -19,6 +19,7 @@ use std::sync::{
 use tracing::{error, info};
 
 use super::events::message::auto_respond_event;
+use super::shared::SharedEnvState;
 
 pub struct BotHandler {
     pub is_parallelized: AtomicBool,
@@ -27,11 +28,24 @@ pub struct BotHandler {
 #[async_trait]
 impl EventHandler for BotHandler {
     async fn ready(&self, ctx: Context, ready: Ready) {
+        let env = ctx
+            .data
+            .read()
+            .await
+            .get::<SharedEnvState>()
+            .unwrap()
+            .clone();
+        let env = env.read().await;
+
         let activity: Option<Activity> = Some(Activity::playing("NeoVim"));
         ctx.set_presence(activity, OnlineStatus::Online).await;
         info!("{} is now open.", &ready.user.name);
 
-        register_global_commands(&ctx).await;
+        if env.get_mode() == "production" {
+            register_global_commands(&ctx).await;
+        } else {
+            register_local_commands(&ctx, &GuildId(*env.get_guild_id())).await;
+        }
 
         let guilds = ctx.cache.guilds();
         let ctxcpy = Arc::new(ctx);
@@ -39,8 +53,6 @@ impl EventHandler for BotHandler {
     }
 
     async fn cache_ready(&self, ctx: Context, guilds: Vec<GuildId>) {
-        info!("Cache built successfuly.");
-
         /*
         We register the local slash commands for each guild here instead of the ready event,
         since the guild cache is not yet ready when the bot is ready(well, obviously).
@@ -54,9 +66,9 @@ impl EventHandler for BotHandler {
             register_local_commands(&ctx, guild_id).await;
         }
         */
+        info!("Cache built successfuly.");
 
         let ctx = Arc::new(ctx);
-
         if !self.is_parallelized.load(Ordering::Relaxed) {
             let ctxcpy1 = Arc::clone(&ctx);
             log_system(ctxcpy1).await;
@@ -67,11 +79,10 @@ impl EventHandler for BotHandler {
             self.is_parallelized.swap(true, Ordering::Relaxed);
         }
 
-        let ctxcpy3 = Arc::clone(&ctx);
-
         /*
         Set the guilds in cache for use later.
         */
+        let ctxcpy3 = Arc::clone(&ctx);
         bind_guilds(ctxcpy3, guilds).await;
     }
 
