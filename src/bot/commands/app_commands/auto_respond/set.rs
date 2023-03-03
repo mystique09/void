@@ -1,11 +1,10 @@
 use std::sync::Arc;
 
 use crate::domain::auto_respond::AutoRespondUsecase;
-use serenity::builder::CreateApplicationCommand;
+use serenity::builder::CreateApplicationCommandOption;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOptionValue;
 use serenity::model::prelude::ChannelId;
-use serenity::model::Permissions;
 use serenity::{
     model::prelude::interaction::application_command::{
         ApplicationCommandInteraction, CommandDataOption,
@@ -148,26 +147,28 @@ pub async fn run(
     }
 }
 
-pub fn register(commands: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
+pub fn register(
+    commands: &mut CreateApplicationCommandOption,
+) -> &mut CreateApplicationCommandOption {
     commands
-        .name("auto_respond")
+        .name("add")
         .description("create a new auto respond")
-        .default_member_permissions(Permissions::ADMINISTRATOR)
-        .create_option(|option| {
+        .kind(CommandOptionType::SubCommand)
+        .create_sub_option(|option| {
             option
                 .name("keyword")
                 .description("the word to detect")
                 .kind(CommandOptionType::String)
                 .required(true)
         })
-        .create_option(|option| {
+        .create_sub_option(|option| {
             option
                 .name("response")
                 .description("the response of the detected word")
                 .kind(CommandOptionType::String)
                 .required(true)
         })
-        .create_option(|option| {
+        .create_sub_option(|option| {
             option
                 .name("type")
                 .description("what kind of response should be sent")
@@ -177,7 +178,7 @@ pub fn register(commands: &mut CreateApplicationCommand) -> &mut CreateApplicati
                 .add_string_choice("Media", "MEDIA")
                 .required(true)
         })
-        .create_option(|option| {
+        .create_sub_option(|option| {
             option
                 .name("mode")
                 .description("where the response should be sent")

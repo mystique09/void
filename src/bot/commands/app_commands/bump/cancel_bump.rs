@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use serenity::{
-    builder::CreateApplicationCommand,
+    builder::CreateApplicationCommandOption,
     model::prelude::{
         command::CommandOptionType,
         interaction::application_command::{
@@ -117,11 +117,14 @@ pub async fn run(
     }
 }
 
-pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
+pub fn register(
+    command: &mut CreateApplicationCommandOption,
+) -> &mut CreateApplicationCommandOption {
     command
-        .name("bump_cancel")
+        .name("cancel")
         .description("Cancel the created bump.")
-        .create_option(|option| {
+        .kind(CommandOptionType::SubCommand)
+        .create_sub_option(|option| {
             option
                 .name("user")
                 .description("who's bump needs to cancel")

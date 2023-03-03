@@ -6,7 +6,7 @@ use crate::{
 };
 use chrono::Duration;
 use serenity::{
-    builder::CreateApplicationCommand,
+    builder::CreateApplicationCommandOption,
     model::prelude::{
         command::CommandOptionType,
         interaction::application_command::{
@@ -210,18 +210,21 @@ async fn schedule_bump(
     });
 }
 
-pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
+pub fn register(
+    command: &mut CreateApplicationCommandOption,
+) -> &mut CreateApplicationCommandOption {
     command
-        .name("bump")
-        .description("Will bump/remind you.")
-        .create_option(|option| {
+        .name("create")
+        .description("Creates new bump.")
+        .kind(CommandOptionType::SubCommand)
+        .create_sub_option(|option| {
             option
                 .name("who")
                 .description("who to bump")
                 .kind(CommandOptionType::User)
                 .required(true)
         })
-        .create_option(|option| {
+        .create_sub_option(|option| {
             option
                 .name("time")
                 .description("when to bump")

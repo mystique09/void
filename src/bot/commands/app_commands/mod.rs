@@ -22,9 +22,8 @@ pub async fn match_app_command(
     options: &[CommandDataOption],
 ) -> String {
     match cmd.data.name.as_str() {
-        "bump" => bump::create_bump::run(Arc::clone(ctx), cmd, options).await,
-        "bump_cancel" => bump::cancel_bump::run(Arc::clone(ctx), cmd, options).await,
-        "auto_respond" => auto_respond::set::run(Arc::clone(ctx), cmd, options).await,
+        "bump" => bump::run(Arc::clone(ctx), cmd, options).await,
+        "auto_respond" => auto_respond::run(Arc::clone(ctx), cmd, options).await,
         _ => "not implemented".to_string(),
     }
 }
@@ -32,8 +31,8 @@ pub async fn match_app_command(
 pub async fn register_local_commands(ctx: &Context, guild_id: &GuildId) {
     let commands = GuildId::set_application_commands(guild_id, &ctx.http, |commands| {
         commands
-            .create_application_command(|command| bump::create_bump::register(command))
-            .create_application_command(|command| bump::cancel_bump::register(command))
+            .create_application_command(|command| bump::register(command))
+            .create_application_command(|command| auto_respond::register(command))
     })
     .await
     .map_err(|why| {
@@ -52,24 +51,14 @@ pub async fn register_local_commands(ctx: &Context, guild_id: &GuildId) {
 }
 
 pub async fn register_global_commands(ctx: &Context) {
-    Command::create_global_application_command(&ctx.http, |command| {
-        bump::create_bump::register(command)
-    })
-    .await
-    .map(|command| info!("created global command: {}", command.name))
-    .map_err(|why| error!("error creating global command: {}", why))
-    .unwrap();
+    Command::create_global_application_command(&ctx.http, |command| bump::register(command))
+        .await
+        .map(|command| info!("created global command: {}", command.name))
+        .map_err(|why| error!("error creating global command: {}", why))
+        .unwrap();
 
     Command::create_global_application_command(&ctx.http, |command| {
-        bump::cancel_bump::register(command)
-    })
-    .await
-    .map(|command| info!("created global command: {}", command.name))
-    .map_err(|why| error!("error creating global command: {}", why))
-    .unwrap();
-
-    Command::create_global_application_command(&ctx.http, |command| {
-        auto_respond::set::register(command)
+        auto_respond::register(command)
     })
     .await
     .map(|command| info!("created global command: {}", command.name))
