@@ -25,11 +25,30 @@ pub async fn bind_keywords(ctx: Arc<Context>, guilds: &[GuildId]) {
             .await
             .unwrap_or(vec![]);
 
+        match guild_state.get_mut(&guild_id) {
+            Some(guild) => {
+                info!(
+                    "guilds {:#?} for this guild {} already exist, and is updated",
+                    guild, guild_id,
+                );
+                guild.keywords = keywords;
+            }
+            None => {
+                let new_guild = crate::bot::shared::Guild {
+                    channels: vec![],
+                    bumps: vec![],
+                    keywords,
+                };
+                guild_state.insert(*guild_id, new_guild).unwrap();
+            }
+        };
+
+        /*
         match guild_state.insert(
             *guild_id,
             crate::bot::shared::Guild {
-                channels: vec![],
-                bumps: vec![],
+                channels: guild_state.channels,
+                bumps: guild_state.bumps,
                 keywords,
             },
         ) {
@@ -42,7 +61,8 @@ pub async fn bind_keywords(ctx: Arc<Context>, guilds: &[GuildId]) {
                 &guild_id
             ),
         };
+        */
     }
 
-    info!("keyword state lock: {:#?}", guild_state);
+    info!("guild state: {:#?}", guild_state);
 }

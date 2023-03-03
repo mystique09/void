@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use chrono::Duration;
 use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::{
@@ -8,7 +7,6 @@ use serenity::{
         interaction::application_command::{
             ApplicationCommandInteraction, CommandDataOption, CommandDataOptionValue,
         },
-        UserId,
     },
     prelude::Context,
     utils::MessageBuilder,
@@ -39,28 +37,10 @@ pub async fn run(
         .clone();
 
     if let CommandDataOptionValue::User(user, _pmember) = user {
-        let mut guild_state = data.write().await;
-        let guild = match guild_state.get_mut(&guild_id) {
-            Some(map) => map,
-            None => {
-                let bumps: Vec<(UserId, Duration)> = vec![];
-                guild_state.insert(
-                    guild_id,
-                    Guild {
-                        channels: vec![],
-                        keywords: vec![],
-                        bumps,
-                    },
-                );
-
-                let bumps = guild_state.get_mut(&guild_id).unwrap();
-                bumps
-            }
-        };
-
         if user.id != command.user.id {
             return "you cannot cancel others bump, that will annoy them".to_string();
         }
+
         /*
         To cancel a bump, we need to know whether a bump for the user
         already exist, thus we iterate each bump. If no bump exist then
@@ -72,38 +52,59 @@ pub async fn run(
           the task is still there running(in sleep mode).
           We just have to wait for it, and immediately return.
         */
-        let mut i: isize = -1;
+        let mut guild_state = data.write().await;
 
-        for bump in guild.bumps.iter() {
-            if bump.0 == user.id {
-                i += 1;
-                break;
+        match guild_state.get_mut(&guild_id) {
+            Some(guild) => {
+                let mut i: isize = -1;
+
+                for bump in guild.bumps.iter() {
+                    if bump.0 == user.id {
+                        i += 1;
+                        break;
+                    }
+                    i += 1;
+                }
+
+                if i == -1 {
+                    error!(
+                        "cannot cancel bump, no bump found for {}/{}",
+                        &user.name, &user.id
+                    );
+
+                    MessageBuilder::new()
+                        .push("no bump scheduled for ")
+                        .user(user.id)
+                        .build()
+                } else {
+                    guild.bumps.remove(i as usize);
+                    info!(
+                        "bump for {} has been canceled, all running bumps: {:#?}",
+                        &user.id, &guild.bumps
+                    );
+
+                    MessageBuilder::new()
+                        .push("bump canceled for user ")
+                        .user(user.id)
+                        .build()
+                }
             }
-            i += 1;
-        }
+            None => {
+                guild_state.insert(
+                    guild_id,
+                    Guild {
+                        channels: vec![],
+                        keywords: vec![],
+                        bumps: vec![],
+                    },
+                );
 
-        if i == -1 {
-            error!(
-                "cannot cancel bump, no bump found for {}/{}",
-                &user.name, &user.id
-            );
-            MessageBuilder::new()
-                .push("no bump scheduled for ")
-                .user(user.id)
-                .build()
-        } else {
-            guild.bumps.remove(i as usize);
-            info!(
-                "bump for {} has been canceled, all running bumps: {:#?}",
-                &user.id, &guild.bumps
-            );
-            MessageBuilder::new()
-                .push("bump canceled for user ")
-                .user(user.id)
-                .build()
+                "no bump scheduled for user".to_string()
+            }
         }
     } else {
         error!("missing user option when cancling bump");
+
         "missing user option".to_string()
     }
 }
