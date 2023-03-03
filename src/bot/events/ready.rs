@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serenity::{model::prelude::GuildId, prelude::Context};
 use tracing::info;
 
-use crate::domain::auto_respond::KeywordUsecase;
+use crate::domain::auto_respond::AutoRespondUsecase;
 
 pub async fn bind_keywords(ctx: Arc<Context>, guilds: &[GuildId]) {
     let data = ctx.data.read().await;

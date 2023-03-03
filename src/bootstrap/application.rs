@@ -34,7 +34,7 @@ impl Application {
         };
         let shared_keyword_usecase = {
             let keyword_repo = repository::keyword_repository::KeywordRepository::new(db.clone());
-            let keyword_usecase = usecase::keyword_usecase::KeywordUsecase::new(keyword_repo);
+            let keyword_usecase = usecase::auto_respond_usecase::KeywordUsecase::new(keyword_repo);
             Arc::new(RwLock::new(keyword_usecase))
         };
 

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::domain::auto_respond::KeywordUsecase;
+use crate::domain::auto_respond::AutoRespondUsecase;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOptionValue;
