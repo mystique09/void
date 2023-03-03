@@ -5,9 +5,9 @@ use tracing::{error, info};
 pub struct Env {
     db_url: Option<String>,
     token: Option<String>,
-    guild_id: Option<String>,
+    guild_id: Option<u64>,
     channel_id: Option<u64>,
-    app_id: Option<String>,
+    app_id: Option<u64>,
     mode: Option<String>,
 }
 
@@ -30,15 +30,19 @@ impl Env {
         let database_url = env::var("DATABASE_URL").unwrap();
         let token = env::var("TOKEN").unwrap();
         let channel_id = env::var("CHANNEL_ID").unwrap();
+        let guild_id = env::var("GUILD_ID").unwrap();
         let app_id = env::var("APP_ID").unwrap();
         let mode = env::var("MODE").unwrap();
-        let parse_channel_id = channel_id.parse::<u64>().unwrap();
+
+        let channel_id = channel_id.parse::<u64>().unwrap();
+        let guild_id = guild_id.parse::<u64>().unwrap();
+        let app_id = app_id.parse::<u64>().unwrap();
 
         Self {
             db_url: Some(database_url),
             token: Some(token),
-            guild_id: None,
-            channel_id: Some(parse_channel_id),
+            guild_id: Some(guild_id),
+            channel_id: Some(channel_id),
             app_id: Some(app_id),
             mode: Some(mode),
         }
@@ -52,7 +56,7 @@ impl Env {
         self.db_url.as_ref().expect("no database url")
     }
 
-    pub fn get_guild_id(&self) -> &String {
+    pub fn get_guild_id(&self) -> &u64 {
         self.guild_id.as_ref().expect("no guild id")
     }
 
@@ -60,7 +64,7 @@ impl Env {
         self.channel_id.as_ref().expect("no channel id")
     }
 
-    pub fn get_app_id(&self) -> &String {
+    pub fn get_app_id(&self) -> &u64 {
         self.app_id.as_ref().expect("no app id")
     }
 
