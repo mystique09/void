@@ -1,17 +1,10 @@
-use chrono::Duration;
 use std::{collections::HashMap, sync::Arc};
 
-use serenity::{
-    model::prelude::{GuildId, UserId},
-    prelude::RwLock,
-};
+use serenity::{model::prelude::GuildId, prelude::RwLock};
 
 use super::database::Database;
 use super::env::Env;
-use crate::bot::shared::{
-    Guild, SharedBumpState, SharedEnvState, SharedGuildState, SharedKeywordUsecase,
-    SharedKeywordsState,
-};
+use crate::bot::shared::{Guild, SharedEnvState, SharedGuildState, SharedKeywordUsecase};
 use crate::{
     bot::{init::Bot, shared::SharedUserUsecase},
     repository, usecase,
@@ -30,18 +23,9 @@ impl Application {
         let bot = Bot::new(&env).await;
 
         let shared_env = Arc::new(RwLock::new(env.clone()));
-        let guild_cache = {
+        let shared_guild_state: Arc<RwLock<HashMap<GuildId, Guild>>> = {
             let guilds: HashMap<GuildId, Guild> = HashMap::new();
             Arc::new(RwLock::new(guilds))
-        };
-        let bump_cache = {
-            let bumps: HashMap<GuildId, Vec<(UserId, Duration)>> = HashMap::new();
-            Arc::new(RwLock::new(bumps))
-        };
-        let shared_keyword_state = {
-            let keywords: HashMap<GuildId, Vec<crate::domain::auto_respond::Keyword>> =
-                HashMap::new();
-            Arc::new(RwLock::new(keywords))
         };
         let shared_user_usecase = {
             let user_repo = repository::user_repository::UserRepository::new(db.clone());
@@ -55,10 +39,7 @@ impl Application {
         };
 
         bot.write_data::<SharedEnvState>(shared_env).await;
-        bot.write_data::<SharedGuildState>(guild_cache).await;
-        bot.write_data::<SharedKeywordsState>(shared_keyword_state)
-            .await;
-        bot.write_data::<SharedBumpState>(bump_cache).await;
+        bot.write_data::<SharedGuildState>(shared_guild_state).await;
         bot.write_data::<SharedUserUsecase>(shared_user_usecase)
             .await;
         bot.write_data::<SharedKeywordUsecase>(shared_keyword_usecase)
