@@ -13,7 +13,7 @@ use serenity::{
 };
 use tracing::{error, info};
 
-use crate::bot::shared::{SharedKeywordUsecase, SharedKeywordsState};
+use crate::bot::shared::{Guild, SharedGuildState, SharedKeywordUsecase};
 
 pub async fn run(
     ctx: Arc<Context>,
@@ -100,17 +100,17 @@ pub async fn run(
     };
     let keyword_usecase = shared_keyword_usecase.read().await;
 
-    let shared_keyword_state = {
-        let kw_state_lock = data.get::<SharedKeywordsState>().unwrap().clone();
+    let guild_state = {
+        let kw_state_lock = data.get::<SharedGuildState>().unwrap().clone();
         kw_state_lock
     };
-    let mut keyword_state = shared_keyword_state.write().await;
+    let mut guild = guild_state.write().await;
 
     match keyword_usecase.create_keyword(new_keyword).await {
         Ok(v) => {
-            match keyword_state.get_mut(&guild_id) {
+            match guild.get_mut(&guild_id) {
                 Some(kws) => {
-                    kws.push(v);
+                    kws.keywords.push(v);
                     info!("new keyword added: {:#?}", kws);
                 }
                 None => {
@@ -119,7 +119,14 @@ pub async fn run(
                         "shared state is empty, attempt to create new: {:#?}",
                         &keywords
                     );
-                    keyword_state.insert(guild_id, keywords);
+                    guild.insert(
+                        guild_id,
+                        Guild {
+                            channels: vec![],
+                            bumps: vec![],
+                            keywords,
+                        },
+                    );
                 }
             };
 

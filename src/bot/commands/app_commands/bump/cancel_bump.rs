@@ -15,7 +15,7 @@ use serenity::{
 };
 use tracing::{error, info};
 
-use crate::bot::shared::SharedBumpState;
+use crate::bot::shared::{Guild, SharedGuildState};
 
 pub async fn run(
     ctx: Arc<Context>,
@@ -34,18 +34,26 @@ pub async fn run(
         .data
         .read()
         .await
-        .get::<SharedBumpState>()
+        .get::<SharedGuildState>()
         .unwrap()
         .clone();
 
     if let CommandDataOptionValue::User(user, _pmember) = user {
-        let mut bumps_cache = data.write().await;
-        let bumps = match bumps_cache.get_mut(&guild_id) {
+        let mut guild_state = data.write().await;
+        let guild = match guild_state.get_mut(&guild_id) {
             Some(map) => map,
             None => {
                 let bumps: Vec<(UserId, Duration)> = vec![];
-                bumps_cache.insert(guild_id, bumps);
-                let bumps = bumps_cache.get_mut(&guild_id).unwrap();
+                guild_state.insert(
+                    guild_id,
+                    Guild {
+                        channels: vec![],
+                        keywords: vec![],
+                        bumps,
+                    },
+                );
+
+                let bumps = guild_state.get_mut(&guild_id).unwrap();
                 bumps
             }
         };
@@ -66,7 +74,7 @@ pub async fn run(
         */
         let mut i: isize = -1;
 
-        for bump in bumps.iter() {
+        for bump in guild.bumps.iter() {
             if bump.0 == user.id {
                 i += 1;
                 break;
@@ -84,10 +92,10 @@ pub async fn run(
                 .user(user.id)
                 .build()
         } else {
-            bumps.remove(i as usize);
+            guild.bumps.remove(i as usize);
             info!(
                 "bump for {} has been canceled, all running bumps: {:#?}",
-                &user.id, &bumps
+                &user.id, &guild.bumps
             );
             MessageBuilder::new()
                 .push("bump canceled for user ")

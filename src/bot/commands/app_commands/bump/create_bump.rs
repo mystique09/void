@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use crate::utils::helpers::{generate_random_bump, generate_random_response};
+use crate::{
+    bot::shared::{Guild, SharedGuildState},
+    utils::helpers::{generate_random_bump, generate_random_response},
+};
 use chrono::Duration;
 use serenity::{
     builder::CreateApplicationCommand,
@@ -15,8 +18,6 @@ use serenity::{
     utils::MessageBuilder,
 };
 use tracing::{error, info};
-
-use crate::bot::shared::SharedBumpState;
 
 pub async fn run(
     ctx: Arc<Context>,
@@ -35,7 +36,7 @@ pub async fn run(
         .data
         .read()
         .await
-        .get::<SharedBumpState>()
+        .get::<SharedGuildState>()
         .unwrap()
         .clone();
 
@@ -52,18 +53,26 @@ pub async fn run(
         }
 
         if let CommandDataOptionValue::String(schedule) = bump_schedule {
-            let mut bumps_cache = data.write().await;
-            let bumps = match bumps_cache.get_mut(&guild_id) {
+            let mut guild_state = data.write().await;
+            let guild = match guild_state.get_mut(&guild_id) {
                 Some(map) => map,
                 None => {
                     let bumps: Vec<(UserId, Duration)> = vec![];
-                    bumps_cache.insert(guild_id, bumps);
-                    let bumps = bumps_cache.get_mut(&guild_id).unwrap();
-                    bumps
+                    guild_state.insert(
+                        guild_id,
+                        Guild {
+                            channels: vec![],
+                            keywords: vec![],
+                            bumps,
+                        },
+                    );
+
+                    let guild = guild_state.get_mut(&guild_id).unwrap();
+                    guild
                 }
             };
 
-            if bumps.iter().filter(|b| b.0 == user.id).count() > 0 {
+            if guild.bumps.iter().filter(|b| b.0 == user.id).count() > 0 {
                 return MessageBuilder::new()
                     .user(command.user.id)
                     .push(" bump already scheduled, you can cancel it via `/bump_cancel` command")
@@ -95,10 +104,10 @@ pub async fn run(
                 _ => "out of scope",
             };
 
-            bumps.push((user.id, dur));
+            guild.bumps.push((user.id, dur));
             info!(
                 "new bump created, all running bumps for guild [{}] {:#?}",
-                &guild_id, &bumps
+                &guild_id, &guild.bumps
             );
             let response = generate_random_bump().await;
             let bump_response = response.to_string().replace("{}", dur_name);
@@ -135,7 +144,7 @@ async fn schedule_bump(
         .data
         .read()
         .await
-        .get::<SharedBumpState>()
+        .get::<SharedGuildState>()
         .unwrap()
         .clone();
 
@@ -143,8 +152,8 @@ async fn schedule_bump(
 
     tokio::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_secs(dur.num_seconds() as u64)).await;
-        let mut bumps_cache = data.write().await;
-        let bumps = bumps_cache.get_mut(&guild_id).unwrap();
+        let mut guild_state = data.write().await;
+        let guild = guild_state.get_mut(&guild_id).unwrap();
 
         /*
         To cancel a bump, we need to know whether a bump for the user
@@ -154,7 +163,7 @@ async fn schedule_bump(
         */
         let mut i: isize = -1;
 
-        for bump in bumps.iter() {
+        for bump in guild.bumps.iter() {
             if bump.0 == user_id {
                 i += 1;
                 break;
@@ -168,13 +177,13 @@ async fn schedule_bump(
         }
 
         // else remove the bump in cache and bump the user
-        bumps.remove(i as usize);
+        guild.bumps.remove(i as usize);
         let response = generate_random_response().await;
         info!(
             "{} {member}, all running bumps for guild [{}]: {:#?}",
             &response,
             &guild_id,
-            &bumps,
+            &guild.bumps,
             member = &user_id.mention(),
         );
 
