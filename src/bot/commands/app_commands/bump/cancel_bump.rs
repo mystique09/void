@@ -7,6 +7,7 @@ use serenity::{
         interaction::application_command::{
             ApplicationCommandInteraction, CommandDataOption, CommandDataOptionValue,
         },
+        ChannelId,
     },
     prelude::Context,
     utils::MessageBuilder,
@@ -90,12 +91,19 @@ pub async fn run(
                 }
             }
             None => {
+                let guild_cache = ctx.cache.guild(guild_id).unwrap();
+                let channels: Vec<(String, ChannelId)> = guild_cache
+                    .channels
+                    .into_iter()
+                    .map(|c| (c.1.to_string(), c.0))
+                    .collect();
+
                 guild_state.insert(
                     guild_id,
                     Guild {
-                        channels: vec![],
                         keywords: vec![],
                         bumps: vec![],
+                        channels,
                     },
                 );
 

@@ -4,6 +4,7 @@ use crate::domain::auto_respond::AutoRespondUsecase;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOptionValue;
+use serenity::model::prelude::ChannelId;
 use serenity::model::Permissions;
 use serenity::{
     model::prelude::interaction::application_command::{
@@ -119,12 +120,20 @@ pub async fn run(
                         "shared state is empty, attempt to create new: {:#?}",
                         &keywords
                     );
+
+                    let guild_cache = ctx.cache.guild(guild_id).unwrap();
+                    let channels: Vec<(String, ChannelId)> = guild_cache
+                        .channels
+                        .into_iter()
+                        .map(|c| (c.1.to_string(), c.0))
+                        .collect();
+
                     guild.insert(
                         guild_id,
                         Guild {
-                            channels: vec![],
                             bumps: vec![],
                             keywords,
+                            channels,
                         },
                     );
                 }

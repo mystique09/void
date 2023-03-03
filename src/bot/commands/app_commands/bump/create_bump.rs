@@ -57,13 +57,20 @@ pub async fn run(
             let guild = match guild_state.get_mut(&guild_id) {
                 Some(map) => map,
                 None => {
+                    let guild_cache = ctx.cache.guild(guild_id).unwrap();
+                    let channels: Vec<(String, ChannelId)> = guild_cache
+                        .channels
+                        .into_iter()
+                        .map(|c| (c.1.to_string(), c.0))
+                        .collect();
+
                     let bumps: Vec<(UserId, Duration)> = vec![];
                     guild_state.insert(
                         guild_id,
                         Guild {
-                            channels: vec![],
                             keywords: vec![],
                             bumps,
+                            channels,
                         },
                     );
 
