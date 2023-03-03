@@ -12,7 +12,6 @@ use super::commands::prefix_commands::general::GENERALCOMMANDS_GROUP;
 use super::commands::prefix_commands::HELP;
 
 use super::{handler::BotHandler, DEFAULT_PREFIX};
-
 pub struct Bot {
     pub client: Client,
 }
@@ -41,9 +40,13 @@ impl Bot {
 
         let fm = StandardFramework::new()
             .configure(|c| {
-                c.prefix(DEFAULT_PREFIX)
-                    .with_whitespace(false)
-                    .owners(owners)
+                c.prefix(if env.get_mode() == "development" {
+                    ";"
+                } else {
+                    DEFAULT_PREFIX
+                })
+                .with_whitespace(false)
+                .owners(owners)
             })
             .help(&HELP)
             .group(&GENERALCOMMANDS_GROUP);
