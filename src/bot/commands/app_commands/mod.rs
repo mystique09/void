@@ -1,7 +1,7 @@
 pub mod admin;
+pub mod ai;
 pub mod auto_respond;
 pub mod bump;
-pub mod ai;
 pub mod rss;
 
 use std::sync::Arc;
