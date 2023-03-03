@@ -38,7 +38,7 @@ pub async fn register_local_commands(ctx: &Context, guild_id: &GuildId) {
     .map_err(|why| {
         error!(
             "cannot create local command: {}, for guild: {}",
-            why, guild_id
+            why, &guild_id
         )
     })
     .unwrap();
