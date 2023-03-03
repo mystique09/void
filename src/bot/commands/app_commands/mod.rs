@@ -1,3 +1,9 @@
+pub mod admin;
+pub mod auto_respond;
+pub mod bump;
+pub mod ai;
+pub mod rss;
+
 use std::sync::Arc;
 
 use serenity::{
@@ -9,11 +15,6 @@ use serenity::{
     prelude::Context,
 };
 use tracing::{error, info};
-
-pub mod admin;
-pub mod auto_respond;
-pub mod bump;
-pub mod rss;
 
 pub async fn match_app_command(
     ctx: &Arc<Context>,
