@@ -14,19 +14,6 @@ impl TypeMapKey for SharedEnvState {
     type Value = Arc<RwLock<Env>>;
 }
 
-pub struct SharedUserUsecase;
-
-impl TypeMapKey for SharedUserUsecase {
-    type Value = Arc<RwLock<crate::usecase::user_usecase::UserUsecase>>;
-}
-
-#[derive(Debug)]
-pub struct SharedKeywordUsecase;
-
-impl TypeMapKey for SharedKeywordUsecase {
-    type Value = Arc<RwLock<crate::usecase::auto_respond_usecase::KeywordUsecase>>;
-}
-
 #[derive(Debug)]
 pub struct Usecase {
     pub user_usecase: crate::usecase::user_usecase::UserUsecase,

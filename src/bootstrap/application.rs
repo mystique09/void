@@ -4,11 +4,8 @@ use serenity::{model::prelude::GuildId, prelude::RwLock};
 
 use super::database::Database;
 use super::env::Env;
-use crate::bot::shared::{Guild, SharedEnvState, SharedGuildState, SharedKeywordUsecase};
-use crate::{
-    bot::{init::Bot, shared::SharedUserUsecase},
-    repository, usecase,
-};
+use crate::bot::shared::{Guild, SharedEnvState, SharedGuildState, SharedUsecase, Usecase};
+use crate::{bot::init::Bot, repository, usecase};
 
 pub struct Application {
     pub env: Env,
@@ -27,23 +24,19 @@ impl Application {
             let guilds: HashMap<GuildId, Guild> = HashMap::new();
             Arc::new(RwLock::new(guilds))
         };
-        let shared_user_usecase = {
+        let shared_usecase = {
             let user_repo = repository::user_repository::UserRepository::new(db.clone());
-            let user_case = usecase::user_usecase::UserUsecase::new(user_repo);
-            Arc::new(RwLock::new(user_case))
-        };
-        let shared_keyword_usecase = {
             let keyword_repo = repository::keyword_repository::KeywordRepository::new(db.clone());
-            let keyword_usecase = usecase::auto_respond_usecase::KeywordUsecase::new(keyword_repo);
-            Arc::new(RwLock::new(keyword_usecase))
+
+            Arc::new(RwLock::new(Usecase {
+                user_usecase: usecase::user_usecase::UserUsecase::new(user_repo),
+                keywords_usecase: usecase::auto_respond_usecase::KeywordUsecase::new(keyword_repo),
+            }))
         };
 
         bot.write_data::<SharedEnvState>(shared_env).await;
         bot.write_data::<SharedGuildState>(shared_guild_state).await;
-        bot.write_data::<SharedUserUsecase>(shared_user_usecase)
-            .await;
-        bot.write_data::<SharedKeywordUsecase>(shared_keyword_usecase)
-            .await;
+        bot.write_data::<SharedUsecase>(shared_usecase).await;
 
         Self { env, db, bot }
     }
