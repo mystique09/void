@@ -25,7 +25,7 @@ pub async fn bind_keywords(ctx: Arc<Context>, guilds: &[GuildId]) {
             .await
             .unwrap_or(vec![]);
 
-        match guild_state.get_mut(&guild_id) {
+        match guild_state.get_mut(guild_id) {
             Some(guild) => {
                 info!(
                     "guilds {:#?} for this guild {} already exist, and is updated",
