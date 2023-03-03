@@ -24,8 +24,21 @@ impl TypeMapKey for SharedUserUsecase {
 pub struct SharedKeywordUsecase;
 
 impl TypeMapKey for SharedKeywordUsecase {
-    type Value = Arc<RwLock<crate::usecase::keyword_usecase::KeywordUsecase>>;
+    type Value = Arc<RwLock<crate::usecase::auto_respond_usecase::KeywordUsecase>>;
 }
+
+#[derive(Debug)]
+pub struct Usecase {
+    pub user_usecase: crate::usecase::user_usecase::UserUsecase,
+    pub keywords_usecase: crate::usecase::auto_respond_usecase::KeywordUsecase,
+}
+
+#[derive(Debug)]
+pub struct SharedUsecase;
+impl TypeMapKey for SharedUsecase {
+    type Value = Arc<RwLock<Usecase>>;
+}
+
 #[derive(Debug)]
 pub struct Guild {
     pub channels: Vec<(String, ChannelId)>,
