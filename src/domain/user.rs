@@ -3,7 +3,6 @@ use chrono::NaiveDate;
 use serenity::async_trait;
 use sqlx::Error as SqlxError;
 
-// TODO!: add fields
 pub struct User {
     pub id: i64,
     pub nickname: String,
