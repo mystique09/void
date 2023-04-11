@@ -1,8 +1,16 @@
 # Void
 Void bot is a general purpose bot made with rust and serenity-rs.
 
-> **Warning**
-> Failing, no test, code sucks, only basic functionality works.
+> **Note**
+> void-bot is WIP.
+
+Features:
+- [x] bump/reminder, you can now cancel a reminder(it was a lil bit hacky-way to implement)
+- [ ] auto respond, only create command works for now (WIP)
+- [ ] rss feeds
+- [ ] ai commands
+- [ ] admin commands
+- [ ] fun commands (memes, games)
 
 Made with:
 - Rust
