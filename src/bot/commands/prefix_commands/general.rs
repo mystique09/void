@@ -28,8 +28,8 @@ async fn info(ctx: &Context, msg: &Message) -> CommandResult {
     };
     let mem_use = format!(
         "{:.2} MB Free out of {:.2}",
-        sys.free_memory() as f32 / 1000.0,
-        sys.total_memory() as f32 / 1000.0
+        sys.free_memory() as f32 / 100000.0,
+        sys.total_memory() as f32 / 100000.0
     );
 
     let user_tmstmp = msg.timestamp;
