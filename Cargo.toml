@@ -22,5 +22,7 @@ members = [
 ]
 
 [dependencies]
+futures-signals = "0.3.33"
+rayon = "1.8.0"
 # mockall = "0.11.0"
 void-infrastructure = { path = "crates/infrastructure", version = "0.1.0" }

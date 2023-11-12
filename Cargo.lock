@@ -979,6 +979,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures-signals"
+version = "0.3.33"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b175f2f6600dd81d92d20cf10872b03ea9df6b2513ca7f672341260dacb1ab2"
+dependencies = [
+ "discard",
+ "futures-channel",
+ "futures-core",
+ "futures-util",
+ "gensym",
+ "log",
+ "pin-project",
+ "serde",
+]
+
+[[package]]
 name = "futures-sink"
 version = "0.3.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1016,6 +1032,18 @@ checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
 dependencies = [
  "typenum",
  "version_check",
+]
+
+[[package]]
+name = "gensym"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "913dce4c5f06c2ea40fc178c06f777ac89fc6b1383e90c254fafb1abe4ba3c82"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.38",
+ "uuid",
 ]
 
 [[package]]
@@ -3617,6 +3645,8 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 name = "void"
 version = "0.1.2"
 dependencies = [
+ "futures-signals",
+ "rayon",
  "void-infrastructure",
 ]
 
