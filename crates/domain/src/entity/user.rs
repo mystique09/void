@@ -4,6 +4,7 @@ use chrono::NaiveDate;
 pub type UserId = Id<User>;
 pub type NickName = Name<User>;
 
+#[derive(Debug)]
 pub struct User {
     id: UserId,
     nickname: NickName,
@@ -27,5 +28,17 @@ impl User {
 
     pub fn nickname(&self) -> &str {
         self.nickname.name()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_create_a_new_user_instance() {
+        let user = User::new(UserId::new(1), NickName::new("deeznuts".to_string()));
+
+        assert_eq!(user.id, UserId::new(1));
     }
 }
