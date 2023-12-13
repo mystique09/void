@@ -4,6 +4,16 @@ use chrono::NaiveDate;
 pub type UserId = Id<User>;
 pub type NickName = Name<User>;
 
+impl NickName {
+    pub fn min_len() -> usize {
+        1
+    }
+
+    pub fn max_len() -> usize {
+        24
+    }
+}
+
 #[derive(Debug)]
 pub struct User {
     id: UserId,
