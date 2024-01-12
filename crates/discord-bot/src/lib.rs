@@ -1,6 +1,11 @@
 use std::sync::{Arc, RwLock};
+
 use log;
+use serenity::all::GatewayIntents;
+
 use void_adapter::db::Database;
+
+use crate::bot::Void;
 
 pub mod handler;
 pub mod commands;
@@ -8,9 +13,11 @@ pub mod hooks;
 pub mod ui;
 pub mod bot;
 
-pub async fn run<D>(_db: RwLock<Arc<D>>, port: u16)
+pub async fn run<D>(_db: RwLock<Arc<D>>, port: u16, token: String, prefix: String, enable_whitespace: bool)
     where
         D: Database
 {
+    let mut void = Void::new(token, prefix, enable_whitespace, GatewayIntents::all()).await;
+    void.start().await;
     log::info!("running bot on port: {}", port);
 }

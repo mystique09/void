@@ -1,14 +1,12 @@
-use std::env;
-
 use tokio::runtime::Runtime;
 
-use void_infrastructure::{logger, bot};
+use void_infrastructure::{bot, logger};
+use void_infrastructure::bot::get_env;
 
 pub fn main() {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL");
-    let port = env::var("PORT").expect("PORT").parse::<u16>().expect("expecting a u16 type");
+    let bot_env = get_env();
     let rt = Runtime::new().expect("tokio runtime");
 
     logger::init_default_logger();
-    rt.block_on(bot::run(&database_url, port));
+    rt.block_on(bot::run(&bot_env.database_url, bot_env.port, &bot_env));
 }
