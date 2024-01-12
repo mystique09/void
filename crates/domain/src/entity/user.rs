@@ -14,7 +14,7 @@ impl NickName {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct User {
     id: UserId,
     nickname: NickName,

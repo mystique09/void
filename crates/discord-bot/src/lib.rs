@@ -1,14 +1,15 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+use std::sync::{Arc, RwLock};
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+use void_adapter::db::Database;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub mod handler;
+pub mod commands;
+pub mod hooks;
+pub mod interface;
+
+pub async fn run<D>(_db: RwLock<Arc<D>>, port: u16)
+    where
+        D: Database
+{
+    println!("[INFO] Running bot on port: {}", port);
 }

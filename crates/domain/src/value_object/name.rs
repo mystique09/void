@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Name<T>(String, PhantomData<T>);
 
 impl<T> Name<T> {

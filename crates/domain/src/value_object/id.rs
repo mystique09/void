@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Id<T>(i64, PhantomData<fn() -> T>);
 
 impl<T> Id<T> {
