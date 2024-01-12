@@ -1,5 +1,6 @@
 use thiserror::Error;
-use void_domain::{User, Id, entity::user::UserId};
+
+use void_domain::{entity::user::UserId, User};
 
 #[derive(Debug, Error)]
 pub enum FindOneError {
@@ -29,6 +30,7 @@ pub enum DeleteOneError {
     Connection,
 }
 
+#[derive(Debug)]
 pub struct Map {
     pub user: User,
 }
