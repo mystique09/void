@@ -17,7 +17,6 @@ members = [
     "crates/db",
     "crates/infrastructure",
     "crates/adapter",
-    "crates/json-boundary",
     "crates/discord-bot"
 ]
 
