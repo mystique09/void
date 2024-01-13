@@ -14,7 +14,7 @@ pub async fn info(ctx: &Context, msg: &Message) -> CommandResult {
     let mem_usage = memory_usage().await;
 
     let cpu_load = format!("{:.2}%", cpu_usage);
-    let memory_load = format!("{:.2} MB free out of {:.2}", mem_usage.0, mem_usage.1);
+    let memory_load = format!("{:.2} MB free out of {:.2} MB", mem_usage.0, mem_usage.1);
 
     let author = &msg.author.name;
     let user_timestamp = msg.timestamp;

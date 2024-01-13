@@ -20,8 +20,8 @@ pub async fn memory_usage() -> MemoryUsageResult {
     let mut system = System::new_all();
     system.refresh_cpu();
 
-    let mem_usage = system.free_memory().ilog10() as f32;
-    let total_memory = system.total_memory().ilog10() as f32;
+    let mem_usage = system.free_memory() as f32 / 1000.;
+    let total_memory = system.total_memory() as f32 / 1000.;
 
     (mem_usage, total_memory)
 }
