@@ -1,11 +1,16 @@
 use std::collections::HashSet;
 
-use serenity::all::{CurrentUser, GatewayIntents, UserId};
+use serenity::all::{ActivityData, CurrentUser, GatewayIntents, OnlineStatus, UserId};
 use serenity::Client;
 use serenity::client::ClientBuilder;
 use serenity::framework::standard::Configuration;
 use serenity::framework::StandardFramework;
 use serenity::http::Http;
+
+use crate::commands::prefix::general::GENERALCOMMANDS_GROUP;
+use crate::commands::prefix::HELP_CMD;
+use crate::handler::BaseEventHandler;
+use crate::handler::user::UserEventHandler;
 
 pub type BotId = CurrentUser;
 pub type AppInfo = Result<(HashSet<UserId>, BotId), ()>;
@@ -77,8 +82,15 @@ async fn get_app_info(token: &str) -> AppInfo {
 }
 
 async fn configure_bot_options(config: &Config) -> StandardFramework {
-    let bot_config = Configuration::new().prefix(&config.prefix).with_whitespace(config.enable_whitespace);
-    let framework = StandardFramework::new();
+    let bot_config = Configuration::new()
+        .prefix(&config.prefix)
+        .with_whitespace(config.enable_whitespace)
+        .on_mention(Some(config.bot_id.id))
+        .owners(config.owners.clone());
+
+    let framework = StandardFramework::new()
+        .help(&HELP_CMD)
+        .group(&GENERALCOMMANDS_GROUP);
     framework.configure(bot_config);
     framework
 }
@@ -86,6 +98,10 @@ async fn configure_bot_options(config: &Config) -> StandardFramework {
 async fn build_client<'a>(config: &Config, framework: StandardFramework) -> Client {
     let client = ClientBuilder::new(&config.token, config.intents)
         .framework(framework)
+        .status(OnlineStatus::Online)
+        .activity(ActivityData::playing("Discord"))
+        .event_handler(BaseEventHandler)
+        .event_handler(UserEventHandler)
         .await
         .expect("something went wrong when creating bot client");
 
