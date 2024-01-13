@@ -52,7 +52,7 @@ impl Void {
     }
 
     pub async fn start(&mut self) {
-        if let Err(why) = self.client.start().await {
+        if let Err(why) = self.client.start_shards(2).await {
             log::error!("Something went wrong while start the bot: {}", why);
         }
     }

@@ -7,15 +7,15 @@ pub struct BaseEventHandler;
 
 #[async_trait]
 impl EventHandler for BaseEventHandler {
-    async fn message(&self, _ctx: Context, new_message: Message) {
+    async fn message(&self, ctx: Context, new_message: Message) {
         if new_message.author.bot {
             return;
         }
 
-        log::info!("new message from: {}, {}", new_message.author.name, new_message.content);
+        log::info!("[SHARD #{}]: New message from: {}, {}", ctx.shard_id, new_message.author.name, new_message.content);
     }
 
-    async fn ready(&self, _ctx: Context, data_about_bot: Ready) {
-        log::info!("{} is ready to use. Listening for incoming commands...", data_about_bot.user.name);
+    async fn ready(&self, ctx: Context, data_about_bot: Ready) {
+        log::info!("[SHARD #{}]: {} is ready to use. Listening for incoming commands...", ctx.shard_id, data_about_bot.user.name);
     }
 }
