@@ -11,6 +11,7 @@ pub mod commands;
 pub mod hooks;
 pub mod ui;
 pub mod bot;
+mod helpers;
 
 pub async fn run<D>(_db: RwLock<Arc<D>>, token: String, prefix: String, enable_whitespace: bool)
     where
