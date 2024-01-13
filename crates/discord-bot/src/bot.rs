@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use serenity::all::{CurrentUser, GatewayIntents, UserId};
 use serenity::Client;
 use serenity::client::ClientBuilder;
+use serenity::framework::standard::Configuration;
 use serenity::framework::StandardFramework;
 use serenity::http::Http;
 
@@ -75,9 +76,10 @@ async fn get_app_info(token: &str) -> AppInfo {
     Ok((owners, bot_id))
 }
 
-async fn configure_bot_options(_config: &Config) -> StandardFramework {
+async fn configure_bot_options(config: &Config) -> StandardFramework {
+    let bot_config = Configuration::new().prefix(&config.prefix).with_whitespace(config.enable_whitespace);
     let framework = StandardFramework::new();
-
+    framework.configure(bot_config);
     framework
 }
 
