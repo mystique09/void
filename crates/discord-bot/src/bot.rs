@@ -8,6 +8,7 @@ use serenity::framework::StandardFramework;
 use serenity::http::Http;
 
 use crate::commands::prefix::general::GENERALCOMMANDS_GROUP;
+use crate::commands::prefix::generator::GENERATORCOMMANDS_GROUP;
 use crate::commands::prefix::HELP_CMD;
 use crate::handler::BaseEventHandler;
 use crate::handler::user::UserEventHandler;
@@ -90,7 +91,8 @@ async fn configure_bot_options(config: &Config) -> StandardFramework {
 
     let framework = StandardFramework::new()
         .help(&HELP_CMD)
-        .group(&GENERALCOMMANDS_GROUP);
+        .group(&GENERALCOMMANDS_GROUP)
+        .group(&GENERATORCOMMANDS_GROUP);
     framework.configure(bot_config);
     framework
 }
