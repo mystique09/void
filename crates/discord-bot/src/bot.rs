@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::sync::atomic::AtomicBool;
 
 use serenity::all::{ActivityData, CurrentUser, GatewayIntents, OnlineStatus, UserId};
 use serenity::Client;
@@ -6,11 +7,13 @@ use serenity::client::ClientBuilder;
 use serenity::framework::standard::Configuration;
 use serenity::framework::StandardFramework;
 use serenity::http::Http;
+use serenity::prelude::TypeMapKey;
 
 use crate::commands::prefix::general::GENERALCOMMANDS_GROUP;
 use crate::commands::prefix::generator::GENERATORCOMMANDS_GROUP;
 use crate::commands::prefix::HELP_CMD;
 use crate::handler::BaseEventHandler;
+use crate::handler::system::SystemEventHandler;
 use crate::handler::user::UserEventHandler;
 
 pub type BotId = CurrentUser;
@@ -49,6 +52,11 @@ impl Void {
             config,
             client,
         }
+    }
+
+    pub async fn insert_shared_state<T: TypeMapKey>(&self, state: T::Value) {
+        let mut data = self.client.data.write().await;
+        data.insert::<T>(state);
     }
 
     pub async fn start(&mut self) {
@@ -104,6 +112,7 @@ async fn build_client<'a>(config: &Config, framework: StandardFramework) -> Clie
         .activity(ActivityData::playing("Discord"))
         .event_handler(BaseEventHandler)
         .event_handler(UserEventHandler)
+        .event_handler(SystemEventHandler { is_concurrent: AtomicBool::new(false) })
         .await
         .expect("something went wrong when creating bot client");
 
