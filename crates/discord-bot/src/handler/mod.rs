@@ -2,6 +2,7 @@ use serenity::all::{Context, EventHandler, Message, Ready};
 use serenity::async_trait;
 
 pub mod user;
+pub mod system;
 
 pub struct BaseEventHandler;
 
