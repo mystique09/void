@@ -27,7 +27,7 @@ pub fn get_env() -> Env {
 pub async fn run(db_url: &str, env: &Env) {
     let pool: PgPool = PgPool::connect(db_url).await.unwrap();
     let db = CloudDatabase::new(pool);
-    let safe_db = RwLock::new(Arc::new(db));
+    let safe_db = Arc::new(RwLock::new(db));
 
     void_discord_bot::run(safe_db, env.token.to_string(), env.prefix.to_string(), env.enable_whitespace).await;
 }
