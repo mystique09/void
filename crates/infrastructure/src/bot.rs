@@ -19,15 +19,20 @@ pub fn get_env() -> Env {
     dotenvy::dotenv().expect("cannot load .env file");
     match envy::from_env::<Env>() {
         Ok(config) => config,
-        Err(e) => panic!("error while parsing env variables: {}", e)
+        Err(e) => panic!("error while parsing env variables: {}", e),
     }
 }
 
-
-pub async fn run(db_url: &str, env: &Env) {
-    let pool: PgPool = PgPool::connect(db_url).await.unwrap();
+pub async fn run(env: &Env) {
+    let pool: PgPool = PgPool::connect(&env.database_url).await.unwrap();
     let db = CloudDatabase::new(pool);
     let safe_db = Arc::new(RwLock::new(db));
 
-    void_discord_bot::run(safe_db, env.token.to_string(), env.prefix.to_string(), env.enable_whitespace).await;
+    void_discord_bot::run(
+        safe_db,
+        env.token.to_string(),
+        env.prefix.to_string(),
+        env.enable_whitespace,
+    )
+    .await;
 }
