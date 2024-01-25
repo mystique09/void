@@ -1,5 +1,5 @@
-use std::sync::{Arc, RwLock};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 use serenity::all::{Context, GuildId};
@@ -44,12 +44,14 @@ async fn log_system_load(ctx: Arc<Context>) {
     let cpu_load = cpu_usage().await;
     let memory_load = memory_usage().await;
 
-    log::info!(r#"
+    log::info!(
+        r#"
     [SHARD #{}] System Resource Usage
     - CPU Usage: {}
     - Memory Usage: {}
     "#,
-    ctx.shard_id,
-    cpu_load,
-    memory_load.0);
+        ctx.shard_id,
+        cpu_load,
+        memory_load.0
+    );
 }

@@ -20,6 +20,7 @@ pub async fn run<D>(_db: Arc<RwLock<D>>, token: String, prefix: String, enable_w
 {
     let system_state = Arc::new(RwLock::new(()));
     let mut void = Void::new(token, prefix, enable_whitespace, GatewayIntents::all()).await;
+
     void.insert_shared_state::<SystemState>(system_state).await;
     void.start().await;
 }
