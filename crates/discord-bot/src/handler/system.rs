@@ -36,13 +36,20 @@ impl EventHandler for SystemEventHandler {
                     tokio::time::sleep(Duration::from_secs(LOG_COOL_DOWN)).await;
                 }
             });
+            self.is_concurrent.swap(true, Ordering::Relaxed);
         }
     }
 }
 
 async fn log_system_load(ctx: Arc<Context>) {
-    let cpu_load = cpu_usage().await;
+    let cpu_load: f32 = cpu_usage().await;
     let memory_load = memory_usage().await;
+
+    let cpu_load = format!("{:.2}%", cpu_load);
+    let memory_load = format!(
+        "{:.2} MB free out of {:.2} MB",
+        memory_load.0, memory_load.1
+    );
 
     log::info!(
         r#"
@@ -52,6 +59,6 @@ async fn log_system_load(ctx: Arc<Context>) {
     "#,
         ctx.shard_id,
         cpu_load,
-        memory_load.0
+        memory_load
     );
 }

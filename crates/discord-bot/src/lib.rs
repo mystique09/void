@@ -7,16 +7,16 @@ use void_adapter::db::Database;
 use crate::bot::Void;
 use crate::handler::system::SystemState;
 
-pub mod handler;
+pub mod bot;
 pub mod commands;
+pub mod handler;
+mod helpers;
 pub mod hooks;
 pub mod ui;
-pub mod bot;
-mod helpers;
 
 pub async fn run<D>(_db: Arc<RwLock<D>>, token: String, prefix: String, enable_whitespace: bool)
-    where
-        D: Database
+where
+    D: Database,
 {
     let system_state = Arc::new(RwLock::new(()));
     let mut void = Void::new(token, prefix, enable_whitespace, GatewayIntents::all()).await;
