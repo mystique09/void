@@ -1,10 +1,10 @@
-FROM rust:1.75.0 AS builder
+FROM rust:1.75.0-alpine AS builder
 
 WORKDIR /usr/src/void
 COPY . . 
 
 # Create a .env file to avoid error.
-RUN cp .env.example .env
+RUN cp .sample.env .env
 
 # Build the binary.
 RUN cargo install --path .
