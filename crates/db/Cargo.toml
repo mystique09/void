@@ -9,7 +9,12 @@ edition = "2021"
 void-domain = { version = "0.1.0", path = '../domain' }
 void-adapter = { version = "0.1.0", path = '../adapter' }
 void-application = { version = "0.1.0", path = '../application' }
+futures-util = "0.3.29"
 
 [dependencies.sqlx]
 version = "^0.7.3"
 features = ["runtime-tokio-rustls", "postgres", "macros", "migrate", "chrono", "uuid"]
+
+[dependencies.tokio]
+version = "1.35.1"
+features = ["macros", "rt-multi-thread"]
