@@ -1,7 +1,7 @@
 # Void
 
 A simple discord bot made with rust and serenity-rs.
-The project sturcutre is heavily inspired
+The project structure is heavily inspired
 by [Clean Architecture Template](https://github.com/flosse/clean-architecture-with-rust).
 
 > *Note*
