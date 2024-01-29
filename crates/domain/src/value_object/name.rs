@@ -12,3 +12,9 @@ impl<T> Name<T> {
         &self.0
     }
 }
+
+impl<T> From<String> for Name<T> {
+    fn from(value: String) -> Self {
+        Self(value, PhantomData)
+    }
+}
