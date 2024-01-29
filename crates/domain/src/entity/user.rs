@@ -16,8 +16,8 @@ impl NickName {
 
 #[derive(Debug, Clone)]
 pub struct User {
-    id: UserId,
-    nickname: NickName,
+    pub id: UserId,
+    pub nickname: NickName,
     pub created_at: Option<NaiveDate>,
     pub updated_at: Option<NaiveDate>,
 }
