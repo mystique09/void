@@ -31,6 +31,8 @@ pub enum Error {
     Repo,
     #[error("{}", NewIdError)]
     NewId,
+    #[error("user already exist")]
+    NewUser,
     #[error(transparent)]
     Invalidity(#[from] UserInvalidity),
 }
@@ -38,7 +40,8 @@ pub enum Error {
 impl From<SaveError> for Error {
     fn from(value: SaveError) -> Self {
         match value {
-            SaveError::Connection => Self::Repo
+            SaveError::Connection => Self::Repo,
+            SaveError::UserAlreadyExist => Self::NewUser
         }
     }
 }
