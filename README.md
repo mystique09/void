@@ -1,10 +1,11 @@
 # Void
 
-Void bot is a general purpose bot made with rust and serenity-rs.
+A simple discord bot made with rust and serenity-rs.
 The project sturcutre is heavily inspired
 by [Clean Architecture Template](https://github.com/flosse/clean-architecture-with-rust).
 
-> **Note**
+> *Note*
+> 
 > The current status of the project is WIP, project currently in complete rewrite.
 
 Made with:
