@@ -19,6 +19,12 @@ impl<T> PartialEq for Id<T> {
     }
 }
 
+impl<T> From<i64> for Id<T> {
+    fn from(value: i64) -> Self {
+        Self(value, PhantomData)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
