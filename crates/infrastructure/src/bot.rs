@@ -3,9 +3,8 @@ use std::sync::{Arc, RwLock};
 use dotenvy;
 use envy;
 use serde::Deserialize;
-use sqlx::PgPool;
 
-use void_db::CloudDatabase;
+use crate::storage::data_storage;
 
 #[derive(Deserialize, Debug)]
 pub struct Env {
@@ -24,8 +23,7 @@ pub fn get_env() -> Env {
 }
 
 pub async fn run(env: &Env) {
-    let pool: PgPool = PgPool::connect(&env.database_url).await.unwrap();
-    let db = CloudDatabase::new(pool);
+    let db = data_storage(&env.database_url).await;
     let safe_db = Arc::new(RwLock::new(db));
 
     void_discord_bot::run(
@@ -34,5 +32,5 @@ pub async fn run(env: &Env) {
         env.prefix.to_string(),
         env.enable_whitespace,
     )
-    .await;
+        .await;
 }

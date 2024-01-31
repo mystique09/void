@@ -1,6 +1,7 @@
 use std::sync::{Arc, RwLock};
 
 use serenity::all::GatewayIntents;
+use serenity::prelude::TypeMapKey;
 
 use void_adapter::db::Database;
 
@@ -14,13 +15,21 @@ mod helpers;
 pub mod hooks;
 pub mod ui;
 
-pub async fn run<D>(_db: Arc<RwLock<D>>, token: String, prefix: String, enable_whitespace: bool)
-where
-    D: Database,
+struct DataStorageState;
+
+impl TypeMapKey for DataStorageState {
+    type Value = Arc<RwLock<dyn Database>>;
+}
+
+
+pub async fn run<D>(db: Arc<RwLock<D>>, token: String, prefix: String, enable_whitespace: bool)
+    where
+        D: Database,
 {
     let system_state = Arc::new(RwLock::new(()));
     let mut void = Void::new(token, prefix, enable_whitespace, GatewayIntents::all()).await;
 
     void.insert_shared_state::<SystemState>(system_state).await;
+    void.insert_shared_state::<DataStorageState>(db).await;
     void.start().await;
 }
