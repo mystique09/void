@@ -29,34 +29,49 @@ pub struct Config {
     pub intents: GatewayIntents,
 }
 
-pub struct Void {
-    pub config: Config,
-    pub client: Client,
+pub struct ConfigManager {
+    config: Config,
 }
 
-impl Void {
-    pub async fn new(token: String, prefix: String, enable_whitespace: bool, intents: GatewayIntents) -> Self {
-        let app_info = get_app_info(&token).await.unwrap();
+impl ConfigManager {
+    pub fn new(token: String, prefix: String, enable_whitespace: bool, intents: GatewayIntents) -> Self {
         let config = Config {
             token,
-            intents,
-            owners: app_info.0,
-            bot_id: app_info.1,
             prefix,
             enable_whitespace,
+            intents,
+            owners: HashSet::new(),
+            bot_id: BotId::default(),
         };
-        let bot_config_options = configure_bot_options(&config).await;
-        let client = build_client(&config, bot_config_options).await;
 
         Self {
-            config,
-            client,
+            config
         }
     }
 
-    pub async fn insert_shared_state<T: TypeMapKey>(&self, state: T::Value) {
-        let mut data = self.client.data.write().await;
-        data.insert::<T>(state);
+    pub async fn initialize_application_info(&mut self) {
+        let application_info = get_application_info(&self.config.token).await.expect("cannot get application info");
+        self.config.owners = application_info.0;
+        self.config.bot_id = application_info.1;
+    }
+
+    pub fn get_config(&self) -> &Config {
+        &self.config
+    }
+}
+
+pub struct ClientManager {
+    client: Client,
+}
+
+impl ClientManager {
+    pub async fn new(config: &Config) -> Self {
+        let bot_config_options = configure_bot_options(config).await;
+        let client = build_client(config, bot_config_options).await;
+
+        Self {
+            client
+        }
     }
 
     pub async fn start(&mut self) {
@@ -64,9 +79,14 @@ impl Void {
             log::error!("Something went wrong while start the bot: {}", why);
         }
     }
+
+    pub async fn insert_shared_state<T: TypeMapKey>(&self, state: T::Value) {
+        let mut data = self.client.data.write().await;
+        data.insert::<T>(state);
+    }
 }
 
-async fn get_app_info(token: &str) -> AppInfo {
+async fn get_application_info(token: &str) -> AppInfo {
     let req = Http::new(token);
 
     let (owners, bot_id) = match req.get_current_application_info().await {
@@ -106,7 +126,7 @@ async fn configure_bot_options(config: &Config) -> StandardFramework {
 }
 
 async fn build_client<'a>(config: &Config, framework: StandardFramework) -> Client {
-    let client = ClientBuilder::new(&config.token, config.intents)
+    ClientBuilder::new(&config.token, config.intents)
         .framework(framework)
         .status(OnlineStatus::Online)
         .activity(ActivityData::playing("Discord"))
@@ -114,7 +134,5 @@ async fn build_client<'a>(config: &Config, framework: StandardFramework) -> Clie
         .event_handler(UserEventHandler)
         .event_handler(SystemEventHandler { is_concurrent: AtomicBool::new(false) })
         .await
-        .expect("something went wrong when creating bot client");
-
-    client
+        .expect("something went wrong when creating bot client")
 }

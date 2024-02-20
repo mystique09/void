@@ -5,7 +5,7 @@ use serenity::prelude::TypeMapKey;
 
 use void_adapter::db::Database;
 
-use crate::bot::Void;
+use crate::bot::{ClientManager, ConfigManager};
 use crate::handler::system::SystemState;
 
 pub mod bot;
@@ -22,14 +22,15 @@ impl TypeMapKey for DataStorageState {
 }
 
 
-pub async fn run<D>(db: Arc<RwLock<D>>, token: String, prefix: String, enable_whitespace: bool)
+pub async fn run<D>(_db: Arc<RwLock<D>>, token: String, prefix: String, enable_whitespace: bool)
     where
         D: Database,
 {
     let system_state = Arc::new(RwLock::new(()));
-    let mut void = Void::new(token, prefix, enable_whitespace, GatewayIntents::all()).await;
+    let mut config_manager = ConfigManager::new(token, prefix, enable_whitespace, GatewayIntents::all());
+    config_manager.initialize_application_info().await;
 
-    void.insert_shared_state::<SystemState>(system_state).await;
-    void.insert_shared_state::<DataStorageState>(db).await;
-    void.start().await;
+    let mut client_manager = ClientManager::new(config_manager.get_config()).await;
+    client_manager.insert_shared_state::<SystemState>(system_state).await;
+    client_manager.start().await;
 }
