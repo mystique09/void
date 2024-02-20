@@ -47,7 +47,7 @@ mod user {
                         return SaveError::UserAlreadyExist;
                     }
 
-                    return SaveError::Connection;
+                    SaveError::Connection
                 })?;
 
             Ok(())

@@ -4,7 +4,7 @@ pub async fn cpu_usage() -> f32 {
     let mut system = System::new();
     system.refresh_cpu();
 
-    let usage = match system.cpus().get(0) {
+    let usage = match system.cpus().first() {
         Some(cpu) => cpu.cpu_usage().log10(),
         None => 0.
     };
