@@ -49,3 +49,17 @@ fn get_matching_emoji<'a>(ping: i64) -> &'a str {
         _ => "🐢🐢🐢",
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_get_three_lion_emoji() {
+        let expected = "🐆🐆🐆";
+        let ping = 80;
+        let actual = get_matching_emoji(ping);
+
+        assert_eq!(expected, actual);
+    }
+}
