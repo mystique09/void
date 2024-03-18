@@ -3,6 +3,7 @@ use serenity::async_trait;
 
 pub mod user;
 pub mod system;
+pub mod interaction;
 
 pub struct BaseEventHandler;
 

@@ -21,16 +21,18 @@ impl TypeMapKey for DataStorageState {
     type Value = Arc<RwLock<dyn Database>>;
 }
 
-
 pub async fn run<D>(_db: Arc<RwLock<D>>, token: String, prefix: String, enable_whitespace: bool)
-    where
-        D: Database,
+where
+    D: Database,
 {
     let system_state = Arc::new(RwLock::new(()));
-    let mut config_manager = ConfigManager::new(token, prefix, enable_whitespace, GatewayIntents::all());
+    let mut config_manager =
+        ConfigManager::new(token, prefix, enable_whitespace, GatewayIntents::all());
     config_manager.initialize_application_info().await;
 
     let mut client_manager = ClientManager::new(config_manager.get_config()).await;
-    client_manager.insert_shared_state::<SystemState>(system_state).await;
+    client_manager
+        .insert_shared_state::<SystemState>(system_state)
+        .await;
     client_manager.start().await;
 }
